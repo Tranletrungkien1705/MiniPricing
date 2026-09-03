@@ -107,6 +107,32 @@ app.MapPost("/api/pricelists/{code}/activate", async (string code, IPricingServi
 app.MapGet("/api/price", async (string item, IPricingService svc, string? tier, string? date) =>
     Results.Ok(await svc.ResolvePriceAsync(item, tier, date))).RequireAuthorization();
 
+// Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
+app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>
+{
+    var rows = dto.Rows ?? new List<ImportPriceRowDto>();
+    if (rows.Count == 0) return Results.BadRequest(new { error = "Rows rỗng." });
+    var code = (dto.Code ?? "REAL-CARPRICE").Trim().ToUpperInvariant();
+    var l = await db.PriceLists.FirstOrDefaultAsync(x => x.OrgId == tenant.OrgId && x.Code == code);
+    if (l is null)
+    {
+        l = new PriceList { OrgId = tenant.OrgId, Code = code, Name = dto.Name ?? "Giá xe thật (Mst_CarPrice)", EffectiveFrom = dto.EffectiveFrom ?? DateTime.Now.AddYears(-1), Status = "Active" };
+        db.PriceLists.Add(l);
+        await db.SaveChangesAsync();
+    }
+    int added = 0, updated = 0;
+    foreach (var r in rows)
+    {
+        if (string.IsNullOrWhiteSpace(r.ItemCode) || r.Price <= 0) continue;
+        var item = r.ItemCode.Trim().ToUpperInvariant();
+        var pi = await db.PriceItems.FirstOrDefaultAsync(x => x.OrgId == tenant.OrgId && x.PriceListId == l.Id && x.ItemCode == item && x.Tier == "Default");
+        if (pi is null) { db.PriceItems.Add(new PriceItem { OrgId = tenant.OrgId, PriceListId = l.Id, ItemCode = item, Tier = "Default", Price = r.Price }); added++; }
+        else { pi.Price = r.Price; updated++; }
+    }
+    await db.SaveChangesAsync();
+    return Results.Ok(new { list = l.Code, added, updated });
+}).RequireAuthorization();
+
 app.MapPost("/api/orgs/register", async (RegisterOrgDto dto, AppDbContext db) =>
 {
     if (string.IsNullOrWhiteSpace(dto.Name)) return Results.BadRequest(new { error = "Cần Name." });
@@ -118,3 +144,5 @@ app.MapPost("/api/orgs/register", async (RegisterOrgDto dto, AppDbContext db) =>
 app.Run();
 
 record RegisterOrgDto(string Name);
+record ImportPriceRowDto(string? ItemCode, decimal Price);
+record ImportPriceDto(string? Code, string? Name, DateTime? EffectiveFrom, List<ImportPriceRowDto>? Rows);
