@@ -87,8 +87,12 @@ app.MapGet("/api/pricelists", async (IPricingService svc) => Results.Ok(await sv
 app.MapPost("/api/pricelists/{code}/items", async (string code, SetPriceDto dto, IPricingService svc) =>
 {
     if (string.IsNullOrWhiteSpace(dto.ItemCode)) return Results.BadRequest(new { error = "Cần ItemCode." });
-    var r = await svc.SetPriceAsync(code, dto);
-    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+    try
+    {
+        var r = await svc.SetPriceAsync(code, dto);
+        return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
 }).RequireAuthorization();
 
 app.MapGet("/api/pricelists/{code}/items", async (string code, IPricingService svc) =>

@@ -52,6 +52,8 @@ public sealed class PricingService(AppDbContext db, ITenantContext tenant) : IPr
     {
         var l = await Get(code);
         if (l is null) return null;
+        if (l.Status != "Draft")
+            throw new InvalidOperationException($"Bảng giá {l.Code} đang ở trạng thái {l.Status} — không thể sửa giá trực tiếp. Chỉ sửa được khi ở Draft (tạo bảng giá mới rồi Activate để thay thế).");
         var item = dto.ItemCode.Trim().ToUpperInvariant();
         var tier = string.IsNullOrWhiteSpace(dto.Tier) ? "Default" : dto.Tier!.Trim();
         var pi = await db.PriceItems.FirstOrDefaultAsync(x => x.OrgId == Org && x.PriceListId == l.Id && x.ItemCode == item && x.Tier == tier);
