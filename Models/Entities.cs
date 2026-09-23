@@ -661,3 +661,37 @@ public sealed class Dealer
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Danh mục nhóm khách hàng (port từ Mst_CustomerGroup nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: CustomerGrpCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// dùng để áp giá theo nhóm khách hàng (khách hàng thuộc nhóm nào thì nhận bảng giá/chiết khấu
+/// của nhóm đó). Mỗi dòng khai báo tên nhóm (CustomerGrpName), mô tả, nhóm cha
+/// (CustomerGrpCodeParent) để dựng cây phân cấp, mã BU (CustomerGrpBUCode/Pattern),
+/// cấp (CustomerGrpLevel) và cờ hiệu lực.
+/// Quy tắc nguồn (WAS_Mst_CustomerGroup_Create/Update/Delete + Mst_CustomerGroup_CheckDB):
+///   - Create: OrgID bắt buộc (Mst_CustomerGroup_Create_InvalidOrgID);
+///             CustomerGrpCode chưa tồn tại (Mst_CustomerGroup_CheckDB_OrganExist);
+///             CustomerGrpName bắt buộc & chưa tồn tại trong org (Mst_CustomerGroup_CheckCustomerGrpName).
+///   - Update: CustomerGrpCode phải tồn tại (Mst_CustomerGroup_CheckDB_OrganNotFound);
+///             nếu đổi tên thì tên mới chưa tồn tại.
+///   - Delete: CustomerGrpCode phải tồn tại; không cho xoá nếu còn khách hàng thuộc nhóm
+///             (Mst_CustomerGroup_Delete_Invalid_CustomerBelongCustomerGroup).
+/// </summary>
+public sealed class CustomerGroup
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string CustomerGrpCode { get; set; } = "";        // mã nhóm khách hàng
+    public string NetworkID { get; set; } = "";              // kênh/vùng áp dụng
+    public string? CustomerGrpCodeParent { get; set; }        // mã nhóm khách hàng cha
+    public string CustomerGrpBUCode { get; set; } = "";      // mã BU (đường dẫn nghiệp vụ)
+    public string CustomerGrpBUPattern { get; set; } = "";   // pattern BU (dùng LIKE)
+    public int CustomerGrpLevel { get; set; }                 // cấp trong cây nhóm
+    public string CustomerGrpName { get; set; } = "";        // tên nhóm khách hàng
+    public string? CustomerGrpDesc { get; set; }              // mô tả
+    public string? SolutionCode { get; set; }                 // mã giải pháp
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

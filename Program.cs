@@ -47,6 +47,7 @@ builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ISsccTypeService, SsccTypeService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<IDealerService, DealerService>();
+builder.Services.AddScoped<ICustomerGroupService, CustomerGroupService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -624,6 +625,35 @@ app.MapDelete("/api/dealers", async (string dlCode, IDealerService svc, string? 
 // Tra đại lý hiệu lực theo mã + kênh.
 app.MapGet("/api/dealer", async (string code, IDealerService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục nhóm khách hàng (Mst_CustomerGroup) — danh mục gốc của bảng giá, dùng để áp giá theo nhóm khách hàng =====
+app.MapPost("/api/customergroups", async (UpsertCustomerGroupDto dto, ICustomerGroupService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CustomerGrpCode)) return Results.BadRequest(new { error = "Cần CustomerGrpCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/customergroups", async (ICustomerGroupService svc, string? customerGrpCode, string? customerGrpName) =>
+    Results.Ok(await svc.ListAsync(customerGrpCode, customerGrpName))).RequireAuthorization();
+
+app.MapDelete("/api/customergroups", async (string customerGrpCode, ICustomerGroupService svc, string? networkId) =>
+{
+    try
+    {
+        var r = await svc.DeleteAsync(customerGrpCode, networkId ?? "ALL");
+        return r is null ? Results.NotFound(new { customerGrpCode }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+// Tra nhóm khách hàng hiệu lực theo mã + kênh.
+app.MapGet("/api/customergroup", async (string code, ICustomerGroupService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// Cây nhóm khách hàng theo kênh (dựng theo CustomerGrpCodeParent).
+app.MapGet("/api/customergroup/tree", async (ICustomerGroupService svc, string? network) =>
+    Results.Ok(await svc.TreeAsync(network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
 app.MapPost("/api/products", async (UpsertProductDto dto, IProductService svc) =>

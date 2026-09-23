@@ -243,5 +243,17 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục nhóm khách hàng mẫu (Mst_CustomerGroup): danh mục gốc của bảng giá, dùng để áp giá theo nhóm khách hàng.
+        if (!await db.CustomerGroups.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.CustomerGroups.AddRange(
+                new CustomerGroup { OrgId = TenantContext.DefaultOrgId, CustomerGrpCode = "ALL", NetworkID = "ALL", CustomerGrpName = "Tất cả khách hàng", CustomerGrpDesc = "Nhóm gốc", CustomerGrpBUCode = "ALL", CustomerGrpBUPattern = "ALL%", CustomerGrpLevel = 1 },
+                new CustomerGroup { OrgId = TenantContext.DefaultOrgId, CustomerGrpCode = "VIP", NetworkID = "ALL", CustomerGrpCodeParent = "ALL", CustomerGrpName = "Khách VIP", CustomerGrpDesc = "Khách hàng thân thiết", CustomerGrpBUCode = "ALL", CustomerGrpBUPattern = "ALL%", CustomerGrpLevel = 2 },
+                new CustomerGroup { OrgId = TenantContext.DefaultOrgId, CustomerGrpCode = "DAILY", NetworkID = "ALL", CustomerGrpCodeParent = "ALL", CustomerGrpName = "Khách đại lý", CustomerGrpDesc = "Khách mua buôn", CustomerGrpBUCode = "ALL", CustomerGrpBUPattern = "ALL%", CustomerGrpLevel = 2 },
+                new CustomerGroup { OrgId = TenantContext.DefaultOrgId, CustomerGrpCode = "VIP", NetworkID = "DEALER", CustomerGrpCodeParent = "ALL", CustomerGrpName = "Khách VIP (đại lý)", CustomerGrpDesc = "Nhóm VIP theo kênh đại lý", CustomerGrpBUCode = "ALL", CustomerGrpBUPattern = "ALL%", CustomerGrpLevel = 2 }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

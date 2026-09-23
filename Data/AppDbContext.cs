@@ -29,6 +29,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<SsccType> SsccTypes => Set<SsccType>();
     public DbSet<AttributeDef> Attributes => Set<AttributeDef>();
     public DbSet<Dealer> Dealers => Set<Dealer>();
+    public DbSet<CustomerGroup> CustomerGroups => Set<CustomerGroup>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -57,5 +58,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<SsccType>().HasIndex(x => new { x.OrgId, x.SSCCType, x.NetworkID }).IsUnique();
         b.Entity<AttributeDef>().HasIndex(x => new { x.OrgId, x.AttributeCode, x.NetworkID }).IsUnique();
         b.Entity<Dealer>().HasIndex(x => new { x.OrgId, x.DLCode, x.NetworkID }).IsUnique();
+        b.Entity<CustomerGroup>().HasIndex(x => new { x.OrgId, x.CustomerGrpCode, x.NetworkID }).IsUnique();
     }
 }
