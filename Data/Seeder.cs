@@ -78,5 +78,17 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Quy đổi tiền tệ mẫu (Mst_CurrencyConvert): cặp tiền tệ nguồn→đích × kênh, tỷ giá + giá trị quy đổi theo hiệu lực.
+        if (!await db.CurrencyConverts.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            var from = new DateTime(2024, 1, 1);
+            db.CurrencyConverts.AddRange(
+                new CurrencyConvert { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", CurrencyCodeV = "VND", NetworkID = "ALL", CurrencyNameV = "Việt Nam Đồng", BaseCurrencyCode = "VND", BuyRate = 25_000, SellRate = 25_400, ValConvert = 25_400, ValConvertP = 25_000, ValConvertToVND = 25_400, EffectDTimeStartV = from, Remark = "Quy đổi USD→VND" },
+                new CurrencyConvert { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "EUR", CurrencyCodeV = "VND", NetworkID = "ALL", CurrencyNameV = "Việt Nam Đồng", BaseCurrencyCode = "VND", BuyRate = 27_000, SellRate = 27_500, ValConvert = 27_500, ValConvertP = 27_000, ValConvertToVND = 27_500, EffectDTimeStartV = from, Remark = "Quy đổi EUR→VND" },
+                new CurrencyConvert { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", CurrencyCodeV = "VND", NetworkID = "DEALER", CurrencyNameV = "Việt Nam Đồng", BaseCurrencyCode = "VND", BuyRate = 25_100, SellRate = 25_500, ValConvert = 25_500, ValConvertP = 25_100, ValConvertToVND = 25_500, EffectDTimeStartV = from, Remark = "Tỷ giá đại lý" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

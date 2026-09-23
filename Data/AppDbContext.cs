@@ -12,6 +12,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<VatRate> VatRates => Set<VatRate>();
     public DbSet<CurrencyEx> CurrencyExes => Set<CurrencyEx>();
     public DbSet<SpecUnit> SpecUnits => Set<SpecUnit>();
+    public DbSet<CurrencyConvert> CurrencyConverts => Set<CurrencyConvert>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -23,5 +24,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<VatRate>().HasIndex(x => new { x.OrgId, x.VATRateCode, x.NetworkID }).IsUnique();
         b.Entity<CurrencyEx>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.NetworkID }).IsUnique();
         b.Entity<SpecUnit>().HasIndex(x => new { x.OrgId, x.SpecCode, x.UnitCode, x.NetworkID }).IsUnique();
+        b.Entity<CurrencyConvert>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.CurrencyCodeV, x.NetworkID, x.EffectDTimeStartV }).IsUnique();
     }
 }

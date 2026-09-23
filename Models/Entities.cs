@@ -187,3 +187,33 @@ public sealed class CurrencyEx
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Quy đổi tiền tệ theo hiệu lực (port từ Mst_CurrencyConvert nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: CurrencyCode (tiền tệ nguồn) + CurrencyCodeV (tiền tệ đích) + NetworkID.
+/// Mỗi dòng khai báo tỷ giá mua/bán (BuyRate/SellRate) và các giá trị quy đổi
+/// (ValConvert, ValConvertP, ValConvertToVND) kèm khoảng hiệu lực riêng
+/// (EffectDTimeStartV/EffectDTimeEndV). Dùng để quy đổi giá bán/giá mua giữa hai loại
+/// tiền tệ theo thời gian, khác với Mst_CurrencyEx (chỉ lưu tỷ giá theo mã tiền tệ).
+/// </summary>
+public sealed class CurrencyConvert
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string CurrencyCode { get; set; } = "";       // tiền tệ nguồn (vd USD)
+    public string CurrencyCodeV { get; set; } = "";      // tiền tệ đích quy đổi (vd VND)
+    public string CurrencyNameV { get; set; } = "";      // tên tiền tệ đích
+    public string BaseCurrencyCode { get; set; } = "";   // tiền tệ gốc
+    public string NetworkID { get; set; } = "";          // kênh/vùng áp dụng
+    public decimal BuyRate { get; set; }                   // tỷ giá mua
+    public decimal SellRate { get; set; }                  // tỷ giá bán
+    public decimal ValConvert { get; set; }                // giá trị quy đổi
+    public decimal ValConvertP { get; set; }               // giá trị quy đổi (P)
+    public decimal ValConvertToVND { get; set; }           // giá trị quy đổi sang VND
+    public DateTime EffectDTimeStartV { get; set; }        // hiệu lực từ
+    public DateTime? EffectDTimeEndV { get; set; }         // hiệu lực đến
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
