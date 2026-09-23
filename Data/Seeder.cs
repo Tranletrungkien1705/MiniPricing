@@ -90,5 +90,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục đơn vị tính mẫu (Mst_Unit): mã hệ thống + mã người dùng + tên đơn vị tính.
+        if (!await db.Units.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Units.AddRange(
+                new Unit { OrgId = TenantContext.DefaultOrgId, UnitCode = "CAI", NetworkID = "ALL", UnitCodeUser = "CAI", UnitName = "Cái", Remark = "Đơn vị chuẩn" },
+                new Unit { OrgId = TenantContext.DefaultOrgId, UnitCode = "THUNG", NetworkID = "ALL", UnitCodeUser = "THUNG", UnitName = "Thùng", Remark = "Thùng đóng gói" },
+                new Unit { OrgId = TenantContext.DefaultOrgId, UnitCode = "BO", NetworkID = "ALL", UnitCodeUser = "BO", UnitName = "Bộ" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

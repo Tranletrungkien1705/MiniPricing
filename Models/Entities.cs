@@ -189,6 +189,28 @@ public sealed class CurrencyEx
 }
 
 /// <summary>
+/// Danh mục đơn vị tính (port từ Mst_Unit nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: UnitCode (mã hệ thống ngầm) + OrgID (+ NetworkID). Mỗi dòng có
+/// UnitCodeUser (mã người dùng nhập), UnitName (tên đơn vị tính), ghi chú và cờ hiệu lực.
+/// SpecUnit/SpecPrice tham chiếu tới đây qua UnitCode để quy đổi và tính giá theo đơn vị.
+/// </summary>
+public sealed class Unit
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string UnitCode { get; set; } = "";       // mã đơn vị tính (UnitCodeSys ngầm)
+    public string NetworkID { get; set; } = "";      // kênh/vùng áp dụng
+    public string UnitCodeUser { get; set; } = "";   // mã đơn vị tính người dùng nhập
+    public string UnitName { get; set; } = "";       // tên đơn vị tính
+    public string? Remark { get; set; }               // ghi chú, mô tả
+    public string CodeGuid { get; set; } = "";       // định danh guid
+    public bool FlagActive { get; set; } = true;
+    public bool DTimeUsed { get; set; }                // cờ đã tham gia nghiệp vụ
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+
+/// <summary>
 /// Quy đổi tiền tệ theo hiệu lực (port từ Mst_CurrencyConvert nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CurrencyCode (tiền tệ nguồn) + CurrencyCodeV (tiền tệ đích) + NetworkID.
 /// Mỗi dòng khai báo tỷ giá mua/bán (BuyRate/SellRate) và các giá trị quy đổi

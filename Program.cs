@@ -32,6 +32,7 @@ builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
 builder.Services.AddScoped<ISpecUnitService, SpecUnitService>();
 builder.Services.AddScoped<ICurrencyConvertService, CurrencyConvertService>();
+builder.Services.AddScoped<IUnitService, UnitService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -276,6 +277,27 @@ app.MapGet("/api/currencyconvert", async (string code, string codeV, ICurrencyCo
 // Quy đổi số tiền từ tiền tệ nguồn sang tiền tệ đích theo tỷ giá hiệu lực (side=buy|sell).
 app.MapGet("/api/currencyconvert/convert", async (string code, string codeV, decimal amount, ICurrencyConvertService svc, string? network, string? date, string? side) =>
     Results.Ok(await svc.ConvertAsync(code, codeV, amount, network, date, side))).RequireAuthorization();
+
+// ===== Danh mục đơn vị tính (Mst_Unit) — mã/tên đơn vị tính + cờ hiệu lực theo kênh =====
+app.MapPost("/api/units", async (UpsertUnitDto dto, IUnitService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.UnitCode)) return Results.BadRequest(new { error = "Cần UnitCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/units", async (IUnitService svc, string? unitCode, string? unitName) =>
+    Results.Ok(await svc.ListAsync(unitCode, unitName))).RequireAuthorization();
+
+app.MapDelete("/api/units", async (string unitCode, IUnitService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(unitCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { unitCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra đơn vị tính hiệu lực theo mã + kênh.
+app.MapGet("/api/unit", async (string code, IUnitService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>
