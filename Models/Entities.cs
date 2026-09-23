@@ -391,3 +391,36 @@ public sealed class SpecType2
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Danh má»¥c nhÃ³m hÃ ng (port tá»« Mst_ProductGroup nguá»“n 2019.4.ProductCenter).
+/// KhoÃ¡ nghiá»‡p vá»¥: ProductGrpCode + OrgID (+ NetworkID). ÄÃ¢y lÃ  danh má»¥c gá»‘c cá»§a báº£ng giÃ¡:
+/// dÃ¹ng Ä‘á»ƒ Ã¡p giÃ¡ theo nhÃ³m hÃ ng. Má»—i dÃ²ng khai bÃ¡o tÃªn nhÃ³m (ProductGrpName), mÃ´ táº£,
+/// nhÃ³m cha (ProductGrpCodeParent) Ä‘á»ƒ dá»±ng cÃ¢y phÃ¢n cáº¥p, mÃ£ BU (ProductGrpBUCode/Pattern),
+/// cáº¥p (ProductGrpLevel), hÃ£ng (BrandCode) vÃ  cá» thÃ nh pháº©m (FlagFG).
+/// Khi táº¡o: ProductGrpCode báº¯t buá»™c & chÆ°a tá»“n táº¡i (Mst_ProductGroup_Create_InvalidProductGrpCode /
+/// Mst_ProductGroup_CheckDB_ProductGroupExist), ProductGrpName báº¯t buá»™c & khÃ´ng trÃ¹ng trong org
+/// (Mst_ProductGroup_Create_InvalidProductGrpName / Mst_ProductGroup_CheckProductGrpName),
+/// BrandCode (náº¿u khÃ¡c rá»—ng) pháº£i tá»“n táº¡i & active (Mst_Brand_CheckDB).
+/// Khi xoÃ¡: khÃ´ng cho xoÃ¡ náº¿u cÃ²n hÃ ng hoÃ¡ thuá»™c nhÃ³m
+/// (Mst_ProductGroup_Delete_Invalid_ProductBelongProductGroup).
+/// </summary>
+public sealed class ProductGroup
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string ProductGrpCode { get; set; } = "";        // mÃ£ nhÃ³m hÃ ng
+    public string NetworkID { get; set; } = "";             // kÃªnh/vÃ¹ng Ã¡p dá»¥ng
+    public string? ProductGrpCodeParent { get; set; }        // mÃ£ nhÃ³m hÃ ng cha
+    public string ProductGrpBUCode { get; set; } = "";      // mÃ£ BU (Ä‘Æ°á»ng dáº«n nghiá»‡p vá»¥)
+    public string ProductGrpBUPattern { get; set; } = "";   // pattern BU (dÃ¹ng LIKE)
+    public int ProductGrpLevel { get; set; }                 // cáº¥p trong cÃ¢y nhÃ³m
+    public string ProductGrpName { get; set; } = "";        // tÃªn nhÃ³m hÃ ng
+    public string? ProductGrpDesc { get; set; }              // mÃ´ táº£
+    public string? BrandCode { get; set; }                   // mÃ£ hÃ£ng (Mst_Brand)
+    public bool FlagFG { get; set; }                         // cá» thÃ nh pháº©m (Finished Good)
+    public bool FlagActive { get; set; } = true;
+    public string CodeGuid { get; set; } = "";              // Ä‘á»‹nh danh guid
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

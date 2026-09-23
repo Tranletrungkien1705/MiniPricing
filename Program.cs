@@ -38,6 +38,7 @@ builder.Services.AddScoped<IDiscountCodeService, DiscountCodeService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<ISpecTypeService, SpecTypeService>();
+builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -436,6 +437,35 @@ app.MapDelete("/api/spectype2s", async (string code, ISpecTypeService svc, strin
 // Tra phân loại 2 hiệu lực theo mã + kênh.
 app.MapGet("/api/spectype2", async (string code, ISpecTypeService svc, string? network) =>
     Results.Ok(await svc.ResolveType2Async(code, network))).RequireAuthorization();
+
+// ===== Danh mục nhóm hàng (Mst_ProductGroup) — danh mục gốc của bảng giá, dùng để áp giá theo nhóm =====
+app.MapPost("/api/productgroups", async (UpsertProductGroupDto dto, IProductGroupService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.ProductGrpCode)) return Results.BadRequest(new { error = "Cần ProductGrpCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/productgroups", async (IProductGroupService svc, string? productGrpCode, string? productGrpName, string? brandCode) =>
+    Results.Ok(await svc.ListAsync(productGrpCode, productGrpName, brandCode))).RequireAuthorization();
+
+app.MapDelete("/api/productgroups", async (string productGrpCode, IProductGroupService svc, string? networkId) =>
+{
+    try
+    {
+        var r = await svc.DeleteAsync(productGrpCode, networkId ?? "ALL");
+        return r is null ? Results.NotFound(new { productGrpCode }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+// Tra nhóm hàng hiệu lực theo mã + kênh.
+app.MapGet("/api/productgroup", async (string code, IProductGroupService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// Cây nhóm hàng theo kênh (dựng theo ProductGrpCodeParent).
+app.MapGet("/api/productgroup/tree", async (IProductGroupService svc, string? network) =>
+    Results.Ok(await svc.TreeAsync(network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

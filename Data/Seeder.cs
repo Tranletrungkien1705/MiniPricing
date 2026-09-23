@@ -166,5 +166,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục nhóm hàng mẫu (Mst_ProductGroup): danh mục gốc của bảng giá, dùng để áp giá theo nhóm.
+        if (!await db.ProductGroups.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.ProductGroups.AddRange(
+                new ProductGroup { OrgId = TenantContext.DefaultOrgId, ProductGrpCode = "GIA DUNG", NetworkID = "ALL", ProductGrpName = "Gia dụng", ProductGrpDesc = "Nhóm hàng gia đình", ProductGrpBUCode = "ALL", ProductGrpBUPattern = "ALL%", ProductGrpLevel = 0, FlagFG = true, CodeGuid = Guid.NewGuid().ToString() },
+                new ProductGroup { OrgId = TenantContext.DefaultOrgId, ProductGrpCode = "LOC NUOC", NetworkID = "ALL", ProductGrpCodeParent = "GIA DUNG", ProductGrpName = "Máy lọc nước", ProductGrpDesc = "Nhóm máy lọc nước", BrandCode = "KANGAROO", ProductGrpBUCode = "GIA DUNG", ProductGrpBUPattern = "GIA DUNG%", ProductGrpLevel = 1, FlagFG = true, CodeGuid = Guid.NewGuid().ToString() },
+                new ProductGroup { OrgId = TenantContext.DefaultOrgId, ProductGrpCode = "PHU KIEN", NetworkID = "ALL", ProductGrpCodeParent = "GIA DUNG", ProductGrpName = "Phụ kiện", ProductGrpDesc = "Nhóm phụ kiện thay thế", ProductGrpBUCode = "GIA DUNG", ProductGrpBUPattern = "GIA DUNG%", ProductGrpLevel = 1, FlagFG = false, CodeGuid = Guid.NewGuid().ToString() }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

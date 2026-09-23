@@ -20,6 +20,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<SpecType1> SpecType1s => Set<SpecType1>();
     public DbSet<SpecType2> SpecType2s => Set<SpecType2>();
+    public DbSet<ProductGroup> ProductGroups => Set<ProductGroup>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -39,5 +40,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<Brand>().HasIndex(x => new { x.OrgId, x.BrandCode, x.NetworkID }).IsUnique();
         b.Entity<SpecType1>().HasIndex(x => new { x.OrgId, x.SpecType1Code, x.NetworkID }).IsUnique();
         b.Entity<SpecType2>().HasIndex(x => new { x.OrgId, x.SpecType2Code, x.NetworkID }).IsUnique();
+        b.Entity<ProductGroup>().HasIndex(x => new { x.OrgId, x.ProductGrpCode, x.NetworkID }).IsUnique();
     }
 }
