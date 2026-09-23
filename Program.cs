@@ -39,6 +39,8 @@ builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<ISpecTypeService, SpecTypeService>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
+builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -466,6 +468,60 @@ app.MapGet("/api/productgroup", async (string code, IProductGroupService svc, st
 // Cây nhóm hàng theo kênh (dựng theo ProductGrpCodeParent).
 app.MapGet("/api/productgroup/tree", async (IProductGroupService svc, string? network) =>
     Results.Ok(await svc.TreeAsync(network))).RequireAuthorization();
+
+// ===== Danh mục loại hàng hóa (Mst_ProductType) — danh mục gốc của bảng giá (Product tham chiếu qua ProductType) =====
+app.MapPost("/api/producttypes", async (UpsertProductTypeDto dto, IProductTypeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.ProductTypeCode)) return Results.BadRequest(new { error = "Cần ProductTypeCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/producttypes", async (IProductTypeService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListAsync(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/producttypes", async (string code, IProductTypeService svc, string? networkId) =>
+{
+    try
+    {
+        var r = await svc.DeleteAsync(code, networkId ?? "ALL");
+        return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+// Tra loại hàng hóa hiệu lực theo mã + kênh.
+app.MapGet("/api/producttype", async (string code, IProductTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
+app.MapPost("/api/products", async (UpsertProductDto dto, IProductService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.ProductCode)) return Results.BadRequest(new { error = "Cần ProductCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/products", async (IProductService svc, string? productCode, string? productName, string? productGrpCode, string? brandCode) =>
+    Results.Ok(await svc.ListAsync(productCode, productName, productGrpCode, brandCode))).RequireAuthorization();
+
+app.MapDelete("/api/products", async (string productCode, IProductService svc, string? networkId) =>
+{
+    try
+    {
+        var r = await svc.DeleteAsync(productCode, networkId ?? "ALL");
+        return r is null ? Results.NotFound(new { productCode }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+// Tra hàng hóa hiệu lực theo mã + kênh.
+app.MapGet("/api/product", async (string code, IProductService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// Tra giá hàng hóa hiệu lực → giá bán đề xuất + giá đã gồm VAT (theo VATRateCode).
+app.MapGet("/api/product/price", async (string code, IProductService svc, string? network) =>
+    Results.Ok(await svc.ResolvePriceAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

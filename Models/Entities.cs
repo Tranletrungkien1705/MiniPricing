@@ -424,3 +424,85 @@ public sealed class ProductGroup
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+/// <summary>
+/// Hàng hóa / sản phẩm (port từ Mst_Product nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: ProductCode + OrgID (+ NetworkID). Đây là danh mục gốc mang thông tin
+/// giá của bảng giá: giá mua đề xuất (UPBuy), giá bán đề xuất (UPSell), mã thuế suất
+/// (VATRateCode), đơn vị tính (UnitCode) và hệ số quy đổi (ValConvert). Liên kết tới các
+/// danh mục gốc khác: BrandCode (Mst_Brand), ProductType (Mst_ProductType),
+/// ProductGrpCode (Mst_ProductGroup) — dùng để áp giá theo nhóm hàng.
+/// Khi tạo: ProductCode chưa tồn tại (Mst_Product_CheckDB_ProductExist),
+/// ProductCodeUser chưa tồn tại (Mst_Product_CheckDB_ProductCodeUserExist),
+/// ProductType phải tồn tại & active (Mst_ProductType_CheckDB),
+/// VATRateCode/UnitCode (nếu khác rỗng) phải tồn tại & active, GTIN (nếu có) phải là số.
+/// Khi xoá: không cho xoá nếu hàng hóa đã phát sinh nghiệp vụ (DTimeUsed != rỗng)
+/// (Mst_Product_Delete_InvalidDTimeUsed).
+/// </summary>
+public sealed class Product
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string ProductCode { get; set; } = "";        // mã hàng hóa (hệ thống)
+    public string NetworkID { get; set; } = "";          // kênh/vùng áp dụng
+    public string ProductLevelSys { get; set; } = "";    // cấp hàng hóa hệ thống (L2Prd...)
+    public string ProductCodeUser { get; set; } = "";    // mã hàng hóa người dùng nhập
+    public string? BrandCode { get; set; }                // mã hãng (Mst_Brand)
+    public string ProductType { get; set; } = "";        // loại hàng hóa (Mst_ProductType)
+    public string? ProductGrpCode { get; set; }           // mã nhóm hàng (Mst_ProductGroup)
+    public string ProductName { get; set; } = "";        // tên hàng hóa
+    public string? ProductNameEN { get; set; }            // tên tiếng Anh
+    public string? ProductBarCode { get; set; }           // mã vạch
+    public string? ProductCodeNetwork { get; set; }       // mã hàng hóa ở kênh cha
+    public string? ProductCodeBase { get; set; }          // mã hàng hóa cơ sở
+    public string? ProductCodeRoot { get; set; }          // mã hàng hóa gốc
+    public bool FlagSerial { get; set; }                  // quản lý serial
+    public bool FlagLot { get; set; }                     // quản lý LOT
+    public decimal ValConvert { get; set; }               // hệ số quy đổi
+    public string? VATRateCode { get; set; }              // mã thuế suất (Mst_VATRate)
+    public string? UnitCode { get; set; }                 // mã đơn vị tính (Mst_Unit)
+    public bool FlagSell { get; set; } = true;            // cho phép bán
+    public bool FlagBuy { get; set; } = true;             // cho phép mua
+    public decimal UPBuy { get; set; }                    // giá mua đề xuất
+    public decimal UPSell { get; set; }                   // giá bán đề xuất
+    public decimal QtyMaxSt { get; set; }                 // tồn lớn nhất
+    public decimal QtyMinSt { get; set; }                 // tồn nhỏ nhất
+    public decimal QtyEffSt { get; set; }                 // tồn tối ưu
+    public string? ProductStd { get; set; }               // tiêu chuẩn
+    public string? ProductExpiry { get; set; }            // hạn sử dụng
+    public string? ProductQuyCach { get; set; }           // quy cách
+    public string? ProductOrigin { get; set; }            // xuất xứ
+    public bool FlagFG { get; set; }                      // cờ thành phẩm (Finished Good)
+    public string? GTIN { get; set; }                     // mã GTIN (phải là số nếu có)
+    public string? SSCCType { get; set; }                 // loại SSCC
+    public string? CustomField1 { get; set; }
+    public string? CustomField2 { get; set; }
+    public string? CustomField3 { get; set; }
+    public string? CustomField4 { get; set; }
+    public string? CustomField5 { get; set; }
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public bool DTimeUsed { get; set; }                    // cờ đã phát sinh nghiệp vụ
+    public string CodeGuid { get; set; } = "";            // định danh guid
+    public DateTime CreateDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? CreateBy { get; set; }
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}/// <summary>
+/// Danh mục loại hàng hóa (port từ Mst_ProductType nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: ProductType + NetworkID. Đây là danh mục gốc của bảng giá:
+/// Product tham chiếu tới đây qua ProductType. Mỗi dòng khai báo tên loại hàng hóa
+/// (ProductTypeName) và cờ hiệu lực. Khi tạo: ProductType bắt buộc & chưa tồn tại
+/// (Mst_ProductType_Create_InvalidProductType / Mst_ProductType_CheckDB_ProductTypeExist),
+/// ProductTypeName bắt buộc (Mst_ProductType_Create_InvalidProductTypeName).
+/// </summary>
+public sealed class ProductType
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string ProductTypeCode { get; set; } = "";   // mã loại hàng hóa
+    public string NetworkID { get; set; } = "";         // kênh/vùng áp dụng
+    public string ProductTypeName { get; set; } = "";   // tên loại hàng hóa
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

@@ -1,0 +1,4 @@
+#!/bin/bash
+P=D:/idocNet/2019.4.ProductCenter/Dev/V20/.svn/pristine
+f="$P/9b/9b81b409820ee23a9d674177b3d673ef1ca6e14c.svn-base"
+grep -n 'Mst_Product_CheckDB_ProductNotFound\|Mst_Product_CheckDB_ProductExist\|Mst_Product_CheckDB_FlagActiveNotMatched\|Mst_Product_CheckDB_ProductCodeUserNotFound\|Mst_Product_CheckDB_ProductCodeUserExist\|Mst_Product_Create_InvalidProductName\|Mst_Product_Create_InvalidProductCodeUK\|Mst_Product_Create_InvalidOrgID\|Mst_Product_Create_InvalidGTIN\|Mst_Product_Create_IsNotNumberGTIN\|Mst_Product_UpdateX_InvalidProductName\|Mst_Product_Update_InvalidProductName\|Mst_Product_Update_Input_FlagSerialInvalid\|Mst_Product_Update_Input_FlagLotInvalid\|Mst_Product_Delete_InvalidDTimeUsed\|Mst_Product_Create_InvalidCOMBO' "$f" | tr -d '\0'
