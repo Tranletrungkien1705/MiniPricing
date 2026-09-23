@@ -221,5 +221,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục đặc tính hàng hóa mẫu (Mst_Attribute): danh mục gốc của bảng giá, dùng để phân loại/áp giá.
+        if (!await db.Attributes.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Attributes.AddRange(
+                new AttributeDef { OrgId = TenantContext.DefaultOrgId, AttributeCode = "CHATLIEU", NetworkID = "ALL", AttributeName = "Chất liệu" },
+                new AttributeDef { OrgId = TenantContext.DefaultOrgId, AttributeCode = "MAUSAC", NetworkID = "ALL", AttributeName = "Màu sắc" },
+                new AttributeDef { OrgId = TenantContext.DefaultOrgId, AttributeCode = "KICHTHUOC", NetworkID = "ALL", AttributeName = "Kích thước" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

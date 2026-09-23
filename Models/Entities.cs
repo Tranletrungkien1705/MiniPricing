@@ -605,3 +605,31 @@ public sealed class SsccType
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Danh mục đặc tính hàng hóa (port từ Mst_Attribute nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: AttributeCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// khai báo các đặc tính (Attribute) dùng để phân loại hàng hóa/quy cách phục vụ áp giá.
+/// Mỗi dòng có tên đặc tính (AttributeName), mã giải pháp (SolutionCode) và cờ hiệu lực.
+/// Quy tắc nguồn (Mst_Attribute_CreateX/UpdateX/DeleteX + Mst_Attribute_CheckDB/CheckAttributeName):
+///   - Create: AttributeCode bắt buộc (Mst_Attribute_Create_InvalidAttributeCode);
+///             AttributeCode chưa tồn tại (Mst_Attribute_CheckDB_AttributeExist);
+///             AttributeName bắt buộc (Mst_Attribute_Create_InvalidAttributeName);
+///             AttributeName chưa tồn tại trong cùng NetworkID (Mst_Attribute_CheckDB_AttributeExist).
+///   - Update: AttributeCode phải tồn tại (Mst_Attribute_CheckDB_AttributeNotFound);
+///             AttributeName không rỗng (Mst_Attribute_UpdateX_InvalidAttributeName);
+///             nếu đổi tên thì tên mới chưa tồn tại trong cùng NetworkID.
+///   - Delete: AttributeCode phải tồn tại (Mst_Attribute_CheckDB_AttributeNotFound).
+/// </summary>
+public sealed class AttributeDef
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string AttributeCode { get; set; } = "";   // mã đặc tính
+    public string NetworkID { get; set; } = "";       // kênh/vùng áp dụng
+    public string AttributeName { get; set; } = "";   // tên đặc tính
+    public string? SolutionCode { get; set; }          // mã giải pháp
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

@@ -45,6 +45,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecCustomFieldService, SpecCustomFieldService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ISsccTypeService, SsccTypeService>();
+builder.Services.AddScoped<IAttributeService, AttributeService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -579,6 +580,27 @@ app.MapDelete("/api/sscctypes", async (string code, ISsccTypeService svc, string
 
 // Tra loại SSCC hiệu lực theo mã + kênh.
 app.MapGet("/api/sscctype", async (string code, ISsccTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục đặc tính hàng hóa (Mst_Attribute) — danh mục gốc của bảng giá, khai báo đặc tính dùng để phân loại/áp giá =====
+app.MapPost("/api/attributes", async (UpsertAttributeDto dto, IAttributeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.AttributeCode)) return Results.BadRequest(new { error = "Cần AttributeCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/attributes", async (IAttributeService svc, string? attributeCode, string? attributeName) =>
+    Results.Ok(await svc.ListAsync(attributeCode, attributeName))).RequireAuthorization();
+
+app.MapDelete("/api/attributes", async (string attributeCode, IAttributeService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(attributeCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { attributeCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra đặc tính hiệu lực theo mã + kênh.
+app.MapGet("/api/attribute", async (string code, IAttributeService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
