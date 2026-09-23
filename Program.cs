@@ -26,6 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
+builder.Services.AddScoped<ISpecPriceHistService, SpecPriceHistService>();
 builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
@@ -138,6 +139,22 @@ app.MapDelete("/api/specprices", async (string specCode, string unitCode, ISpecP
 // Tra giá quy cách hiệu lực → giá sau chiết khấu + giá đã gồm VAT.
 app.MapGet("/api/specprice", async (string spec, ISpecPriceService svc, string? unit, string? network, string? date) =>
     Results.Ok(await svc.ResolveAsync(spec, unit, network, date))).RequireAuthorization();
+
+// ===== Lịch sử giá theo quy cách (Mst_SpecPriceHist) — audit trail biến động giá =====
+app.MapPost("/api/specpricehists", async (RecordSpecPriceHistDto dto, ISpecPriceHistService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SpecCode) || string.IsNullOrWhiteSpace(dto.UnitCode))
+        return Results.BadRequest(new { error = "Cần SpecCode và UnitCode." });
+    try { return Results.Ok(await svc.RecordAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/specpricehists", async (ISpecPriceHistService svc, string? specCode, string? unitCode, string? actionType) =>
+    Results.Ok(await svc.ListAsync(specCode, unitCode, actionType))).RequireAuthorization();
+
+// Dòng thời gian biến động giá của một quy cách × đơn vị × kênh.
+app.MapGet("/api/specpricehist/timeline", async (string spec, ISpecPriceHistService svc, string? unit, string? network) =>
+    Results.Ok(await svc.TimelineAsync(spec, unit, network))).RequireAuthorization();
 
 // ===== Giá xe theo CarSubSpec (Mst_CarSubSpecPrice) — GTĐG/GTBĐTD + giá bán theo hiệu lực =====
 app.MapPost("/api/carsubspeccprices", async (UpsertCarSubSpecPriceDto dto, ICarSubSpecPriceService svc) =>

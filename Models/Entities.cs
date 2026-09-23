@@ -58,6 +58,42 @@ public sealed class SpecPrice
 }
 
 /// <summary>
+/// Lịch sử giá theo quy cách (port từ Mst_SpecPriceHist nguồn 2019.4.ProductCenter).
+/// Bảng audit: mỗi lần Create/Update/Delete một dòng SpecPrice, hệ thống ghi lại một
+/// bản chụp (snapshot) toàn bộ trường giá kèm FunctionName (hàm gọi),
+/// FunctionActionType (ADD/UPDATE/DELETE), HistRefType ('MST_SPECPRICE') và RefCode00..03.
+/// Dùng để truy vết biến động giá bán/giá mua/chiết khấu theo thời gian.
+/// </summary>
+public sealed class SpecPriceHist
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecCode { get; set; } = "";        // mã quy cách
+    public string UnitCode { get; set; } = "";        // đơn vị tính
+    public string NetworkID { get; set; } = "";       // kênh/vùng áp giá
+    public decimal BuyPrice { get; set; }              // giá mua (snapshot)
+    public decimal SellPrice { get; set; }             // giá bán (snapshot)
+    public string CurrencyCode { get; set; } = "VND";
+    public string VATRateCode { get; set; } = "VAT10";
+    public decimal DiscountVND { get; set; }           // chiết khấu (VND)
+    public DateTime EffectDTimeStart { get; set; }     // hiệu lực từ
+    public DateTime? EffectDTimeEnd { get; set; }      // hiệu lực đến
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+    public string FunctionName { get; set; } = "";     // hàm gọi (vd WAS_Mst_SpecPrice_Create)
+    public string FunctionActionType { get; set; } = ""; // ADD / UPDATE / DELETE
+    public string? FunctionRemark { get; set; }
+    public string HistRefType { get; set; } = "MST_SPECPRICE"; // loại tham chiếu lịch sử
+    public string? RefCode00 { get; set; }
+    public string? RefCode01 { get; set; }
+    public string? RefCode02 { get; set; }
+    public string? RefCode03 { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now; // thời điểm ghi lịch sử
+}
+
+/// <summary>
 /// Giá xe theo CarSubSpec (port từ Mst_CarSubSpecPrice nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CarCode (mã xe) + SubSpecCode (quy cách con) + NetworkID.
 /// Mỗi dòng có GTĐG (giá thị trường đề xuất) và GTBĐTD (giá bán đề xuất tối đa)

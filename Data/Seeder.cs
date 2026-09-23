@@ -67,5 +67,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Lịch sử giá theo quy cách mẫu (Mst_SpecPriceHist): audit trail ADD/UPDATE/DELETE.
+        if (!await db.SpecPriceHists.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            var from = new DateTime(2024, 1, 1);
+            db.SpecPriceHists.AddRange(
+                new SpecPriceHist { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-001", UnitCode = "CAI", NetworkID = "ALL", BuyPrice = 8_000_000, SellPrice = 9_500_000, DiscountVND = 0, VATRateCode = "VAT10", EffectDTimeStart = from, FunctionName = "WAS_Mst_SpecPrice_Create", FunctionActionType = "ADD", HistRefType = "MST_SPECPRICE", CreatedAt = from, Remark = "Giá niêm yết ban đầu" },
+                new SpecPriceHist { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-001", UnitCode = "CAI", NetworkID = "ALL", BuyPrice = 8_000_000, SellPrice = 10_000_000, DiscountVND = 500_000, VATRateCode = "VAT10", EffectDTimeStart = from, FunctionName = "WAS_Mst_SpecPrice_Update", FunctionActionType = "UPDATE", HistRefType = "MST_SPECPRICE", CreatedAt = from.AddDays(30), Remark = "Điều chỉnh giá bán + chiết khấu" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

@@ -23,7 +23,7 @@ public interface ISpecPriceService
     Task<object> ResolveAsync(string specCode, string? unitCode, string? networkId, string? date);
 }
 
-public sealed class SpecPriceService(AppDbContext db, ITenantContext tenant) : ISpecPriceService
+public sealed class SpecPriceService(AppDbContext db, ITenantContext tenant, ISpecPriceHistService hist) : ISpecPriceService
 {
     private Guid Org => tenant.OrgId;
 
@@ -50,6 +50,7 @@ public sealed class SpecPriceService(AppDbContext db, ITenantContext tenant) : I
         var row = await db.SpecPrices.FirstOrDefaultAsync(x => x.OrgId == Org
             && x.SpecCode == spec && x.UnitCode == unit && x.NetworkID == net
             && x.EffectDTimeStart == dto.EffectDTimeStart);
+        var isNew = row is null;
         if (row is null)
         {
             row = new SpecPrice { OrgId = Org, SpecCode = spec, UnitCode = unit, NetworkID = net, EffectDTimeStart = dto.EffectDTimeStart };
@@ -65,6 +66,12 @@ public sealed class SpecPriceService(AppDbContext db, ITenantContext tenant) : I
         row.FlagActive = true;
         row.LogLUDTimeUTC = DateTime.UtcNow;
         await db.SaveChangesAsync();
+        // Ghi lịch sử giá (Mst_SpecPriceHist): ADD khi tạo mới, UPDATE khi sửa.
+        await hist.RecordAsync(new RecordSpecPriceHistDto(
+            row.SpecCode, row.UnitCode, row.NetworkID, row.BuyPrice, row.SellPrice, row.DiscountVND,
+            row.CurrencyCode, row.VATRateCode, row.EffectDTimeStart, row.EffectDTimeEnd, row.Remark,
+            row.FlagActive, isNew ? "WAS_Mst_SpecPrice_Create" : "WAS_Mst_SpecPrice_Update",
+            isNew ? "ADD" : "UPDATE", null, row.LogLUBy, null, null, null, null));
         return Project(row);
     }
 
@@ -89,6 +96,11 @@ public sealed class SpecPriceService(AppDbContext db, ITenantContext tenant) : I
         var row = await db.SpecPrices.FirstOrDefaultAsync(x => x.OrgId == Org
             && x.SpecCode == spec && x.UnitCode == unit && x.NetworkID == net && x.EffectDTimeStart == effectStart);
         if (row is null) return null;
+        // Ghi lịch sử giá (Mst_SpecPriceHist): DELETE trước khi xoá dòng giá.
+        await hist.RecordAsync(new RecordSpecPriceHistDto(
+            row.SpecCode, row.UnitCode, row.NetworkID, row.BuyPrice, row.SellPrice, row.DiscountVND,
+            row.CurrencyCode, row.VATRateCode, row.EffectDTimeStart, row.EffectDTimeEnd, row.Remark,
+            row.FlagActive, "WAS_Mst_SpecPrice_Delete", "DELETE", null, row.LogLUBy, null, null, null, null));
         db.SpecPrices.Remove(row);
         await db.SaveChangesAsync();
         return new { deleted = true, spec, unit, network = net, effectStart };
