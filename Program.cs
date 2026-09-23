@@ -44,6 +44,7 @@ builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecCustomFieldService, SpecCustomFieldService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ISsccTypeService, SsccTypeService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -554,6 +555,31 @@ app.MapDelete("/api/currencies", async (string code, ICurrencyService svc) =>
 // Tra loại tiền tệ hiệu lực theo mã.
 app.MapGet("/api/currency", async (string code, ICurrencyService svc) =>
     Results.Ok(await svc.ResolveAsync(code))).RequireAuthorization();
+
+// ===== Danh mục loại SSCC (Mst_SSCCType) — danh mục gốc của bảng giá, Product tham chiếu qua SSCCType =====
+app.MapPost("/api/sscctypes", async (UpsertSsccTypeDto dto, ISsccTypeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SSCCType)) return Results.BadRequest(new { error = "Cần SSCCType." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/sscctypes", async (ISsccTypeService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListAsync(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/sscctypes", async (string code, ISsccTypeService svc, string? networkId) =>
+{
+    try
+    {
+        var r = await svc.DeleteAsync(code, networkId ?? "ALL");
+        return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+// Tra loại SSCC hiệu lực theo mã + kênh.
+app.MapGet("/api/sscctype", async (string code, ISsccTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
 app.MapPost("/api/products", async (UpsertProductDto dto, IProductService svc) =>

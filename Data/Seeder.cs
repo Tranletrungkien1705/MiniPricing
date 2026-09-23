@@ -210,5 +210,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục loại SSCC mẫu (Mst_SSCCType): danh mục gốc của bảng giá, Product tham chiếu qua SSCCType.
+        if (!await db.SsccTypes.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.SsccTypes.AddRange(
+                new SsccType { OrgId = TenantContext.DefaultOrgId, SSCCType = "SSCC-PALLET", NetworkID = "ALL", SSCCTypeName = "Pallet" },
+                new SsccType { OrgId = TenantContext.DefaultOrgId, SSCCType = "SSCC-CARTON", NetworkID = "ALL", SSCCTypeName = "Thùng carton" },
+                new SsccType { OrgId = TenantContext.DefaultOrgId, SSCCType = "SSCC-BAG", NetworkID = "ALL", SSCCTypeName = "Bao/bì" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

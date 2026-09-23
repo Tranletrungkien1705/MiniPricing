@@ -583,3 +583,25 @@ public sealed class Currency
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+/// <summary>
+/// Danh mục loại SSCC (port từ Mst_SSCCType nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: SSCCType + NetworkID. Đây là danh mục gốc của bảng giá:
+/// Product tham chiếu tới đây qua SSCCType (mã loại SSCC — Serial Shipping Container Code,
+/// dùng để đóng gói/định danh lô hàng khi ghi giá và xuất kho). Mỗi dòng khai báo
+/// tên loại SSCC (SSCCTypeName) và cờ hiệu lực (FlagActive).
+/// Quy tắc nguồn (Mst_SSCCType_CheckDB + error codes):
+///   - SSCCType phải tồn tại khi tham chiếu (Mst_SSCCType_CheckDB_SSCCTypeNotFound);
+///   - SSCCType chưa tồn tại khi tạo (Mst_SSCCType_CheckDB_SSCCTypeExist);
+///   - trạng thái hiệu lực không khớp (Mst_SSCCType_CheckDB_FlagActiveNotMatched).
+/// </summary>
+public sealed class SsccType
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SSCCType { get; set; } = "";        // mã loại SSCC
+    public string NetworkID { get; set; } = "";       // kênh/vùng áp dụng
+    public string SSCCTypeName { get; set; } = "";    // tên loại SSCC
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
