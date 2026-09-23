@@ -45,6 +45,17 @@ public static class Seeder
             await db.SaveChangesAsync();
         }
 
+        // Lịch sử tỷ giá ngoại tệ mẫu (Mst_CurrencyExHist): audit trail ADD/UPDATE/DELETE.
+        if (!await db.CurrencyExHists.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            var from = new DateTime(2024, 1, 1);
+            db.CurrencyExHists.AddRange(
+                new CurrencyExHist { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", NetworkID = "ALL", CurrencyName = "Đô la Mỹ", BuyRate = 24_800, SellRate = 25_200, InterEx = "Y", FunctionName = "WAS_Mst_CurrencyEx_Create", FunctionActionType = "ADD", HistRefType = "MST_CURRENTCYEX", CreatedAt = from, Remark = "Tỷ giá ban đầu" },
+                new CurrencyExHist { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", NetworkID = "ALL", CurrencyName = "Đô la Mỹ", BuyRate = 25_000, SellRate = 25_400, InterEx = "Y", FunctionName = "WAS_Mst_CurrencyEx_Update", FunctionActionType = "UPDATE", HistRefType = "MST_CURRENTCYEX", CreatedAt = from.AddDays(30), Remark = "Điều chỉnh tỷ giá" }
+            );
+            await db.SaveChangesAsync();
+        }
+
         // Giá xe theo CarSubSpec mẫu (Mst_CarSubSpecPrice): GTĐG/GTBĐTD + giá bán theo kênh.
         if (!await db.CarSubSpecPrices.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
         {

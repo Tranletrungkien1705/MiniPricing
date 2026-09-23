@@ -189,6 +189,39 @@ public sealed class CurrencyEx
 }
 
 /// <summary>
+/// Lịch sử tỷ giá ngoại tệ (port từ Mst_CurrencyExHist nguồn 2019.4.ProductCenter).
+/// Bảng audit: mỗi lần Create/Update/Delete một dòng CurrencyEx (Mst_CurrencyEx),
+/// business layer (WAS_Mst_CurrencyEx_*) gọi Mst_CurrencyExHist_Perform để ghi một bản
+/// chụp (snapshot) toàn bộ trường tỷ giá, kèm FunctionName (hàm gọi),
+/// FunctionActionType (ADD/UPDATE/DELETE), HistRefType ('MST_CURRENTCYEX' — giữ nguyên
+/// như nguồn) và RefCode00..03. Dùng để truy vết biến động tỷ giá mua/bán theo thời gian.
+/// </summary>
+public sealed class CurrencyExHist
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string CurrencyCode { get; set; } = "";       // mã tiền tệ (snapshot)
+    public string NetworkID { get; set; } = "";          // kênh/vùng áp dụng
+    public string CurrencyName { get; set; } = "";       // tên tiền tệ
+    public decimal BuyRate { get; set; }                   // tỷ giá mua (snapshot)
+    public decimal SellRate { get; set; }                  // tỷ giá bán (snapshot)
+    public DateTime UpdatedTime { get; set; } = DateTime.Now; // thời điểm cập nhật tỷ giá
+    public string InterEx { get; set; } = "";            // cờ/nguồn tỷ giá liên ngân hàng
+    public string? Remark { get; set; }
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+    public string FunctionName { get; set; } = "";     // hàm gọi (vd WAS_Mst_CurrencyEx_Create)
+    public string FunctionActionType { get; set; } = ""; // ADD / UPDATE / DELETE
+    public string? FunctionRemark { get; set; }
+    public string HistRefType { get; set; } = "MST_CURRENTCYEX"; // loại tham chiếu lịch sử (nguồn)
+    public string? RefCode00 { get; set; }
+    public string? RefCode01 { get; set; }
+    public string? RefCode02 { get; set; }
+    public string? RefCode03 { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now; // thời điểm ghi lịch sử
+}
+
+/// <summary>
 /// Danh mục đơn vị tính (port từ Mst_Unit nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: UnitCode (mã hệ thống ngầm) + OrgID (+ NetworkID). Mỗi dòng có
 /// UnitCodeUser (mã người dùng nhập), UnitName (tên đơn vị tính), ghi chú và cờ hiệu lực.

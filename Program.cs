@@ -30,6 +30,7 @@ builder.Services.AddScoped<ISpecPriceHistService, SpecPriceHistService>();
 builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
+builder.Services.AddScoped<ICurrencyExHistService, CurrencyExHistService>();
 builder.Services.AddScoped<ISpecUnitService, SpecUnitService>();
 builder.Services.AddScoped<ICurrencyConvertService, CurrencyConvertService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
@@ -233,6 +234,22 @@ app.MapGet("/api/currencyex", async (string code, ICurrencyExService svc, string
 // Quy đổi số tiền sang tiền tệ gốc theo tỷ giá hiệu lực (side=buy|sell).
 app.MapGet("/api/currencyex/convert", async (string code, decimal amount, ICurrencyExService svc, string? network, string? side) =>
     Results.Ok(await svc.ConvertAsync(code, amount, network, side))).RequireAuthorization();
+
+// ===== Lịch sử tỷ giá ngoại tệ (Mst_CurrencyExHist) — audit trail biến động tỷ giá =====
+app.MapPost("/api/currencyexhists", async (RecordCurrencyExHistDto dto, ICurrencyExHistService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CurrencyCode))
+        return Results.BadRequest(new { error = "Cần CurrencyCode." });
+    try { return Results.Ok(await svc.RecordAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/currencyexhists", async (ICurrencyExHistService svc, string? currencyCode, string? actionType) =>
+    Results.Ok(await svc.ListAsync(currencyCode, actionType))).RequireAuthorization();
+
+// Dòng thời gian biến động tỷ giá của một mã tiền tệ × kênh.
+app.MapGet("/api/currencyexhist/timeline", async (string code, ICurrencyExHistService svc, string? network) =>
+    Results.Ok(await svc.TimelineAsync(code, network))).RequireAuthorization();
 
 // ===== Quy cách × đơn vị tính (Mst_SpecUnit) — hệ số quy đổi + kích thước/khối lượng theo quy cách =====
 app.MapPost("/api/specunits", async (UpsertSpecUnitDto dto, ISpecUnitService svc) =>

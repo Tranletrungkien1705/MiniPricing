@@ -11,6 +11,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<CarSubSpecPrice> CarSubSpecPrices => Set<CarSubSpecPrice>();
     public DbSet<VatRate> VatRates => Set<VatRate>();
     public DbSet<CurrencyEx> CurrencyExes => Set<CurrencyEx>();
+    public DbSet<CurrencyExHist> CurrencyExHists => Set<CurrencyExHist>();
     public DbSet<SpecUnit> SpecUnits => Set<SpecUnit>();
     public DbSet<CurrencyConvert> CurrencyConverts => Set<CurrencyConvert>();
     public DbSet<Unit> Units => Set<Unit>();
@@ -33,6 +34,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<CarSubSpecPrice>().HasIndex(x => new { x.OrgId, x.CarCode, x.SubSpecCode, x.NetworkID, x.EffectDTimeStart }).IsUnique();
         b.Entity<VatRate>().HasIndex(x => new { x.OrgId, x.VATRateCode, x.NetworkID }).IsUnique();
         b.Entity<CurrencyEx>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.NetworkID }).IsUnique();
+        b.Entity<CurrencyExHist>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.NetworkID, x.CreatedAt });
         b.Entity<SpecUnit>().HasIndex(x => new { x.OrgId, x.SpecCode, x.UnitCode, x.NetworkID }).IsUnique();
         b.Entity<CurrencyConvert>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.CurrencyCodeV, x.NetworkID, x.EffectDTimeStartV }).IsUnique();
         b.Entity<Unit>().HasIndex(x => new { x.OrgId, x.UnitCode, x.NetworkID }).IsUnique();

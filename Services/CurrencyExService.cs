@@ -29,7 +29,7 @@ public interface ICurrencyExService
     Task<object> ConvertAsync(string currencyCode, decimal amount, string? networkId, string? side);
 }
 
-public sealed class CurrencyExService(AppDbContext db, ITenantContext tenant) : ICurrencyExService
+public sealed class CurrencyExService(AppDbContext db, ITenantContext tenant, ICurrencyExHistService hist) : ICurrencyExService
 {
     private Guid Org => tenant.OrgId;
 
@@ -51,6 +51,7 @@ public sealed class CurrencyExService(AppDbContext db, ITenantContext tenant) : 
 
         var row = await db.CurrencyExes.FirstOrDefaultAsync(x => x.OrgId == Org
             && x.CurrencyCode == code && x.NetworkID == net);
+        var isNew = row is null;
         if (row is null)
         {
             row = new CurrencyEx { OrgId = Org, CurrencyCode = code, NetworkID = net };
@@ -66,6 +67,12 @@ public sealed class CurrencyExService(AppDbContext db, ITenantContext tenant) : 
         row.UpdatedTime = DateTime.Now;
         row.LogLUDTimeUTC = DateTime.UtcNow;
         await db.SaveChangesAsync();
+        // Ghi lịch sử tỷ giá (Mst_CurrencyExHist): ADD khi tạo mới, UPDATE khi sửa.
+        await hist.RecordAsync(new RecordCurrencyExHistDto(
+            row.CurrencyCode, row.NetworkID, row.CurrencyName, row.BuyRate, row.SellRate,
+            row.InterEx, row.Remark,
+            isNew ? "WAS_Mst_CurrencyEx_Create" : "WAS_Mst_CurrencyEx_Update",
+            isNew ? "ADD" : "UPDATE", null, row.LogLUBy, null, null, null, null));
         return Project(row);
     }
 
@@ -88,6 +95,10 @@ public sealed class CurrencyExService(AppDbContext db, ITenantContext tenant) : 
         var row = await db.CurrencyExes.FirstOrDefaultAsync(x => x.OrgId == Org
             && x.CurrencyCode == code && x.NetworkID == net);
         if (row is null) return null;   // Mst_CurrencyEx_CheckDB_CurrencyCodeNotFound
+        // Ghi lịch sử tỷ giá (Mst_CurrencyExHist): DELETE trước khi xoá dòng tỷ giá.
+        await hist.RecordAsync(new RecordCurrencyExHistDto(
+            row.CurrencyCode, row.NetworkID, row.CurrencyName, row.BuyRate, row.SellRate,
+            row.InterEx, row.Remark, "WAS_Mst_CurrencyEx_Delete", "DELETE", null, row.LogLUBy, null, null, null, null));
         db.CurrencyExes.Remove(row);
         await db.SaveChangesAsync();
         return new { deleted = true, currencyCode = code, network = net };
