@@ -101,5 +101,15 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Quy cách / sản phẩm mẫu (Mst_Spec): danh mục gốc của bảng giá, SpecPrice tham chiếu qua SpecCode.
+        if (!await db.Specs.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Specs.AddRange(
+                new Spec { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-001", NetworkID = "ALL", SpecName = "Máy lọc nước RO", SpecDesc = "Máy lọc nước gia đình", ModelCode = "RO-100", SpecType1 = "GIA DUNG", Color = "Trắng", FlagHasSerial = true, FlagHasLOT = false, DefaultUnitCode = "CAI", StandardUnitCode = "CAI", Remark = "Quy cách chuẩn" },
+                new Spec { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-002", NetworkID = "ALL", SpecName = "Bộ lõi lọc", SpecDesc = "Bộ lõi lọc thay thế", ModelCode = "RO-100", SpecType1 = "PHU KIEN", Color = "Xanh", FlagHasSerial = false, FlagHasLOT = true, DefaultUnitCode = "BO", StandardUnitCode = "BO" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

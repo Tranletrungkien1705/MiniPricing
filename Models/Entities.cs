@@ -211,6 +211,47 @@ public sealed class Unit
 }
 
 /// <summary>
+/// Quy cách / sản phẩm (port từ Mst_Spec nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: SpecCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// SpecPrice/SpecUnit tham chiếu tới đây qua SpecCode. Mỗi dòng khai báo tên quy cách,
+/// model (ModelCode), phân loại (SpecType1/SpecType2), màu, đơn vị mặc định/chuẩn,
+/// cờ quản lý serial/LOT và các trường mở rộng (CustomField1..10).
+/// </summary>
+public sealed class Spec
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecCode { get; set; } = "";            // mã quy cách
+    public string NetworkID { get; set; } = "";           // kênh/vùng áp dụng
+    public string SpecName { get; set; } = "";            // tên quy cách
+    public string? SpecDesc { get; set; }                  // mô tả
+    public string? ModelCode { get; set; }                 // mã model (Mst_Model)
+    public string? SpecType1 { get; set; }                 // phân loại 1 (Mst_SpecType1)
+    public string? SpecType2 { get; set; }                 // phân loại 2 (Mst_SpecType2)
+    public string? Color { get; set; }                     // màu
+    public bool FlagHasSerial { get; set; }                // có quản lý serial
+    public bool FlagHasLOT { get; set; }                   // có quản lý LOT
+    public string DefaultUnitCode { get; set; } = "";     // đơn vị tính mặc định
+    public string StandardUnitCode { get; set; } = "";    // đơn vị tính chuẩn
+    public string? NetworkSpecCode { get; set; }           // mã quy cách ở kênh cha
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public bool FlagExist { get; set; }                    // cờ đã phát sinh nghiệp vụ
+    public string? CustomField1 { get; set; }
+    public string? CustomField2 { get; set; }
+    public string? CustomField3 { get; set; }
+    public string? CustomField4 { get; set; }
+    public string? CustomField5 { get; set; }
+    public string? CustomField6 { get; set; }
+    public string? CustomField7 { get; set; }
+    public string? CustomField8 { get; set; }
+    public string? CustomField9 { get; set; }
+    public string? CustomField10 { get; set; }
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+
+/// <summary>
 /// Quy đổi tiền tệ theo hiệu lực (port từ Mst_CurrencyConvert nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CurrencyCode (tiền tệ nguồn) + CurrencyCodeV (tiền tệ đích) + NetworkID.
 /// Mỗi dòng khai báo tỷ giá mua/bán (BuyRate/SellRate) và các giá trị quy đổi

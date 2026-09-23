@@ -33,6 +33,7 @@ builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
 builder.Services.AddScoped<ISpecUnitService, SpecUnitService>();
 builder.Services.AddScoped<ICurrencyConvertService, CurrencyConvertService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
+builder.Services.AddScoped<ISpecService, SpecService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -297,6 +298,27 @@ app.MapDelete("/api/units", async (string unitCode, IUnitService svc, string? ne
 
 // Tra đơn vị tính hiệu lực theo mã + kênh.
 app.MapGet("/api/unit", async (string code, IUnitService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Quy cách / sản phẩm (Mst_Spec) — danh mục gốc của bảng giá (SpecPrice tham chiếu qua SpecCode) =====
+app.MapPost("/api/specs", async (UpsertSpecDto dto, ISpecService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SpecCode)) return Results.BadRequest(new { error = "Cần SpecCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/specs", async (ISpecService svc, string? specCode, string? specName, string? modelCode) =>
+    Results.Ok(await svc.ListAsync(specCode, specName, modelCode))).RequireAuthorization();
+
+app.MapDelete("/api/specs", async (string specCode, ISpecService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(specCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { specCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra quy cách hiệu lực theo mã + kênh.
+app.MapGet("/api/spec", async (string code, ISpecService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.

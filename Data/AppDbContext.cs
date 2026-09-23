@@ -14,6 +14,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<SpecUnit> SpecUnits => Set<SpecUnit>();
     public DbSet<CurrencyConvert> CurrencyConverts => Set<CurrencyConvert>();
     public DbSet<Unit> Units => Set<Unit>();
+    public DbSet<Spec> Specs => Set<Spec>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -27,5 +28,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<SpecUnit>().HasIndex(x => new { x.OrgId, x.SpecCode, x.UnitCode, x.NetworkID }).IsUnique();
         b.Entity<CurrencyConvert>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.CurrencyCodeV, x.NetworkID, x.EffectDTimeStartV }).IsUnique();
         b.Entity<Unit>().HasIndex(x => new { x.OrgId, x.UnitCode, x.NetworkID }).IsUnique();
+        b.Entity<Spec>().HasIndex(x => new { x.OrgId, x.SpecCode, x.NetworkID }).IsUnique();
     }
 }
