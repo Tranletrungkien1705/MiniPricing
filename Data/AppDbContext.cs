@@ -10,6 +10,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<CarSubSpecPrice> CarSubSpecPrices => Set<CarSubSpecPrice>();
     public DbSet<VatRate> VatRates => Set<VatRate>();
     public DbSet<CurrencyEx> CurrencyExes => Set<CurrencyEx>();
+    public DbSet<SpecUnit> SpecUnits => Set<SpecUnit>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -19,5 +20,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<CarSubSpecPrice>().HasIndex(x => new { x.OrgId, x.CarCode, x.SubSpecCode, x.NetworkID, x.EffectDTimeStart }).IsUnique();
         b.Entity<VatRate>().HasIndex(x => new { x.OrgId, x.VATRateCode, x.NetworkID }).IsUnique();
         b.Entity<CurrencyEx>().HasIndex(x => new { x.OrgId, x.CurrencyCode, x.NetworkID }).IsUnique();
+        b.Entity<SpecUnit>().HasIndex(x => new { x.OrgId, x.SpecCode, x.UnitCode, x.NetworkID }).IsUnique();
     }
 }

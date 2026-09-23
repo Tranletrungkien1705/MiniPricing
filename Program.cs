@@ -29,6 +29,7 @@ builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
 builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
+builder.Services.AddScoped<ISpecUnitService, SpecUnitService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -205,6 +206,32 @@ app.MapGet("/api/currencyex", async (string code, ICurrencyExService svc, string
 // Quy đổi số tiền sang tiền tệ gốc theo tỷ giá hiệu lực (side=buy|sell).
 app.MapGet("/api/currencyex/convert", async (string code, decimal amount, ICurrencyExService svc, string? network, string? side) =>
     Results.Ok(await svc.ConvertAsync(code, amount, network, side))).RequireAuthorization();
+
+// ===== Quy cách × đơn vị tính (Mst_SpecUnit) — hệ số quy đổi + kích thước/khối lượng theo quy cách =====
+app.MapPost("/api/specunits", async (UpsertSpecUnitDto dto, ISpecUnitService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SpecCode) || string.IsNullOrWhiteSpace(dto.UnitCode))
+        return Results.BadRequest(new { error = "Cần SpecCode và UnitCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/specunits", async (ISpecUnitService svc, string? specCode, string? unitCode) =>
+    Results.Ok(await svc.ListAsync(specCode, unitCode))).RequireAuthorization();
+
+app.MapDelete("/api/specunits", async (string specCode, string unitCode, ISpecUnitService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(specCode, unitCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { specCode, unitCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra đơn vị tính hiệu lực theo quy cách + đơn vị + kênh.
+app.MapGet("/api/specunit", async (string spec, string unit, ISpecUnitService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(spec, unit, network))).RequireAuthorization();
+
+// Quy đổi số lượng theo đơn vị tính về số lượng theo đơn vị chuẩn.
+app.MapGet("/api/specunit/convert", async (string spec, string unit, decimal qty, ISpecUnitService svc, string? network) =>
+    Results.Ok(await svc.ConvertQtyAsync(spec, unit, qty, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

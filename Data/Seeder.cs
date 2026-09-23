@@ -56,5 +56,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Quy cách × đơn vị tính mẫu (Mst_SpecUnit): hệ số quy đổi + kích thước/khối lượng.
+        if (!await db.SpecUnits.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.SpecUnits.AddRange(
+                new SpecUnit { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-001", UnitCode = "CAI", NetworkID = "ALL", StandardUnitCode = "CAI", SpecUnitDesc = "Cái (đơn vị chuẩn)", Qty = 1, Weight = 12.5m, Remark = "Đơn vị chuẩn" },
+                new SpecUnit { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-001", UnitCode = "THUNG", NetworkID = "ALL", StandardUnitCode = "CAI", SpecUnitDesc = "Thùng 12 cái", Qty = 12, Length = 60, Width = 40, Height = 30, Volume = 0.072m, Weight = 150, Remark = "Quy đổi theo thùng" },
+                new SpecUnit { OrgId = TenantContext.DefaultOrgId, SpecCode = "SP-002", UnitCode = "BO", NetworkID = "ALL", StandardUnitCode = "BO", SpecUnitDesc = "Bộ (đơn vị chuẩn)", Qty = 1 }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

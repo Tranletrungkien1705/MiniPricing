@@ -101,6 +101,34 @@ public sealed class VatRate
 }
 
 /// <summary>
+/// Quy cách × đơn vị tính (port từ Mst_SpecUnit nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: SpecCode + UnitCode (+ NetworkID). Mỗi dòng khai báo đơn vị tính
+/// của một quy cách: hệ số quy đổi (Qty) về đơn vị chuẩn (StandardUnitCode) và
+/// kích thước/khối lượng (Length/Width/Height/Volume/Weight) dùng để tính giá theo đơn vị.
+/// SpecPrice tham chiếu tới đây qua cặp SpecCode + UnitCode.
+/// </summary>
+public sealed class SpecUnit
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecCode { get; set; } = "";            // mã quy cách
+    public string UnitCode { get; set; } = "";            // mã đơn vị tính
+    public string NetworkID { get; set; } = "";           // kênh/vùng áp dụng
+    public string StandardUnitCode { get; set; } = "";    // đơn vị chuẩn quy đổi về
+    public string SpecUnitDesc { get; set; } = "";        // mô tả đơn vị tính của quy cách
+    public decimal Qty { get; set; } = 1;                  // hệ số quy đổi về đơn vị chuẩn
+    public decimal? Length { get; set; }                   // dài
+    public decimal? Width { get; set; }                    // rộng
+    public decimal? Height { get; set; }                   // cao
+    public decimal? Volume { get; set; }                   // thể tích
+    public decimal? Weight { get; set; }                   // khối lượng
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+
+/// <summary>
 /// Tỷ giá ngoại tệ (port từ Mst_CurrencyEx nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CurrencyCode (+ NetworkID). Mỗi dòng có tên tiền tệ, tiền tệ gốc,
 /// tỷ giá mua (BuyRate) / tỷ giá bán (SellRate), thời điểm cập nhật và ghi chú.
