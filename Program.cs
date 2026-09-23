@@ -25,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 });
 builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -111,6 +112,28 @@ app.MapPost("/api/pricelists/{code}/activate", async (string code, IPricingServi
 // Tra giá hiệu lực — app fleet gọi để lấy đơn giá.
 app.MapGet("/api/price", async (string item, IPricingService svc, string? tier, string? date) =>
     Results.Ok(await svc.ResolvePriceAsync(item, tier, date))).RequireAuthorization();
+
+// ===== Giá theo quy cách (Mst_SpecPrice) — giá mua/bán + chiết khấu + VAT theo hiệu lực =====
+app.MapPost("/api/specprices", async (UpsertSpecPriceDto dto, ISpecPriceService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SpecCode) || string.IsNullOrWhiteSpace(dto.UnitCode))
+        return Results.BadRequest(new { error = "Cần SpecCode và UnitCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/specprices", async (ISpecPriceService svc, string? specCode) =>
+    Results.Ok(await svc.ListAsync(specCode))).RequireAuthorization();
+
+app.MapDelete("/api/specprices", async (string specCode, string unitCode, ISpecPriceService svc, string? networkId, DateTime effectStart) =>
+{
+    var r = await svc.DeleteAsync(specCode, unitCode, networkId ?? "ALL", effectStart);
+    return r is null ? Results.NotFound(new { specCode, unitCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra giá quy cách hiệu lực → giá sau chiết khấu + giá đã gồm VAT.
+app.MapGet("/api/specprice", async (string spec, ISpecPriceService svc, string? unit, string? network, string? date) =>
+    Results.Ok(await svc.ResolveAsync(spec, unit, network, date))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

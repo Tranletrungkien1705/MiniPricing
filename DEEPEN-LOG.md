@@ -1,0 +1,3 @@
+# DEEPEN-LOG — MiniPricing
+
+- 2026-XX-XX: Port nghiệp vụ **Giá theo quy cách (Mst_SpecPrice)** từ nguồn `2019.4.ProductCenter` (Dev/V20/01.Release, SVN pristine). Nguồn: entity `Mst_SpecPrice` (SpecCode+UnitCode+NetworkID, BuyPrice/SellPrice/DiscountVND/VATRateCode/CurrencyCode, EffectDTimeStart/End), controller `MstSpecPriceController` (Get/Create/Update/Delete), error codes `Mst_SpecPrice_CheckDB_*`. Thêm `SpecPrice` entity + `SpecPriceService` (upsert/list/delete + resolve giá hiệu lực tính giá sau chiết khấu và giá gồm VAT) + endpoints `/api/specprices`, `/api/specprice` + seed mẫu. Build Release: 0 error.
