@@ -27,6 +27,7 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
 builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
+builder.Services.AddScoped<IVatRateService, VatRateService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -157,6 +158,27 @@ app.MapDelete("/api/carsubspeccprices", async (string carCode, string subSpecCod
 // Tra giá xe theo CarSubSpec hiệu lực → giá bán + chênh lệch so với GTĐG/GTBĐTD.
 app.MapGet("/api/carsubspeccprice", async (string car, ICarSubSpecPriceService svc, string? subSpec, string? network, string? date) =>
     Results.Ok(await svc.ResolveAsync(car, subSpec, network, date))).RequireAuthorization();
+
+// ===== Danh mục thuế suất VAT (Mst_VATRate) — % thuế suất + mô tả theo kênh =====
+app.MapPost("/api/vatrates", async (UpsertVatRateDto dto, IVatRateService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.VATRateCode)) return Results.BadRequest(new { error = "Cần VATRateCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/vatrates", async (IVatRateService svc, string? vatRateCode) =>
+    Results.Ok(await svc.ListAsync(vatRateCode))).RequireAuthorization();
+
+app.MapDelete("/api/vatrates", async (string vatRateCode, IVatRateService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(vatRateCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { vatRateCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra thuế suất hiệu lực theo mã + kênh.
+app.MapGet("/api/vatrate", async (string code, IVatRateService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

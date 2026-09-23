@@ -10,6 +10,18 @@ public static class Seeder
             db.Orgs.Add(new Org { Id = TenantContext.DefaultOrgId, Name = "Demo Pricing", ApiKey = "demo-pricing" });
         await db.SaveChangesAsync();
 
+        // Danh mục thuế suất VAT mẫu (Mst_VATRate): mã × kênh → % thuế suất + mô tả.
+        if (!await db.VatRates.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.VatRates.AddRange(
+                new VatRate { OrgId = TenantContext.DefaultOrgId, VATRateCode = "VAT0", NetworkID = "ALL", VATRate = 0, VATDesc = "Không chịu thuế" },
+                new VatRate { OrgId = TenantContext.DefaultOrgId, VATRateCode = "VAT5", NetworkID = "ALL", VATRate = 5, VATDesc = "Thuế suất 5%" },
+                new VatRate { OrgId = TenantContext.DefaultOrgId, VATRateCode = "VAT8", NetworkID = "ALL", VATRate = 8, VATDesc = "Thuế suất 8%" },
+                new VatRate { OrgId = TenantContext.DefaultOrgId, VATRateCode = "VAT10", NetworkID = "ALL", VATRate = 10, VATDesc = "Thuế suất 10%" }
+            );
+            await db.SaveChangesAsync();
+        }
+
         // Giá theo quy cách mẫu (Mst_SpecPrice): 1 quy cách × đơn vị × kênh, có chiết khấu + VAT.
         if (!await db.SpecPrices.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
         {

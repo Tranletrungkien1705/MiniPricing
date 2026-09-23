@@ -81,3 +81,21 @@ public sealed class CarSubSpecPrice
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Danh mục thuế suất VAT (port từ Mst_VATRate nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: VATRateCode (+ NetworkID). Mỗi dòng có % thuế suất, mô tả và cờ hiệu lực.
+/// SpecPrice tham chiếu tới đây qua VATRateCode để tính giá đã gồm VAT.
+/// </summary>
+public sealed class VatRate
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string VATRateCode { get; set; } = "";   // mã thuế suất (vd VAT10)
+    public string NetworkID { get; set; } = "";     // kênh/vùng áp dụng
+    public decimal VATRate { get; set; }             // % thuế suất
+    public string VATDesc { get; set; } = "";       // mô tả
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
