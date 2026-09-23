@@ -111,5 +111,17 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Mã giảm giá / chiết khấu mẫu (Inos_DiscountCode): loại giảm giá + giá trị + hiệu lực.
+        if (!await db.DiscountCodes.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            var from = new DateTime(2024, 1, 1);
+            db.DiscountCodes.AddRange(
+                new DiscountCode { OrgId = TenantContext.DefaultOrgId, Code = "SALE10", DiscountType = "Percent", DiscountAmount = 10, RemainQty = 100, Description = "Giảm 10%", Enabled = true, EffectDateFrom = from },
+                new DiscountCode { OrgId = TenantContext.DefaultOrgId, Code = "GIAM500K", DiscountType = "Absolute", DiscountAmount = 500_000, RemainQty = 50, Description = "Giảm 500.000đ", Enabled = true, EffectDateFrom = from },
+                new DiscountCode { OrgId = TenantContext.DefaultOrgId, Code = "TET2024", DiscountType = "Percent", DiscountAmount = 15, RemainQty = 0, Description = "Khuyến mãi Tết (hết lượt)", Enabled = false, EffectDateFrom = from, EffectDateTo = from.AddMonths(2) }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

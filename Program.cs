@@ -34,6 +34,7 @@ builder.Services.AddScoped<ISpecUnitService, SpecUnitService>();
 builder.Services.AddScoped<ICurrencyConvertService, CurrencyConvertService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<ISpecService, SpecService>();
+builder.Services.AddScoped<IDiscountCodeService, DiscountCodeService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -320,6 +321,34 @@ app.MapDelete("/api/specs", async (string specCode, ISpecService svc, string? ne
 // Tra quy cách hiệu lực theo mã + kênh.
 app.MapGet("/api/spec", async (string code, ISpecService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Mã giảm giá / chiết khấu (Inos_DiscountCode) — loại giảm giá + giá trị + hiệu lực =====
+app.MapPost("/api/discountcodes", async (UpsertDiscountCodeDto dto, IDiscountCodeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.Code)) return Results.BadRequest(new { error = "Cần Code." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/discountcodes", async (IDiscountCodeService svc, string? code, bool? enabled) =>
+    Results.Ok(await svc.ListAsync(code, enabled))).RequireAuthorization();
+
+app.MapDelete("/api/discountcodes", async (string code, IDiscountCodeService svc) =>
+{
+    var r = await svc.DeleteAsync(code);
+    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra mã giảm giá hiệu lực theo mã + thời điểm (kiểm tra tồn tại/Enabled/hiệu lực).
+app.MapGet("/api/discountcode", async (string code, IDiscountCodeService svc, string? date) =>
+    Results.Ok(await svc.ResolveAsync(code, DateTime.TryParse(date, out var d) ? d : null))).RequireAuthorization();
+
+// Áp mã giảm giá lên một số tiền → số tiền giảm + số tiền sau giảm (trừ lượt còn lại).
+app.MapGet("/api/discountcode/apply", async (string code, decimal amount, IDiscountCodeService svc, string? date) =>
+{
+    try { return Results.Ok(await svc.ApplyAsync(code, amount, DateTime.TryParse(date, out var d) ? d : null)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

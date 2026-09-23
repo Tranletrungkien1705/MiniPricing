@@ -280,3 +280,27 @@ public sealed class CurrencyConvert
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Mã giảm giá / chiết khấu (port từ Inos_DiscountCode nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: Code (+ OrgID). Mỗi mã có loại giảm giá (DiscountType: Percent=1 /
+/// Absolute=2), giá trị giảm (DiscountAmount), số lượng còn lại (RemainQty), mô tả,
+/// cờ kích hoạt (Enabled) và khoảng hiệu lực (EffectDateFrom/EffectDateTo).
+/// Khi áp vào đơn: mã phải tồn tại (DiscountCodeNotFound) và phải Enabled
+/// (InvalidDiscountStatus) — theo Mst_NNT_Calc_InvalidInosCreateOrder_*.
+/// </summary>
+public sealed class DiscountCode
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string Code { get; set; } = "";             // mã giảm giá
+    public int RemainQty { get; set; }                  // số lượng còn lại
+    public string DiscountType { get; set; } = "Percent"; // Percent (1) / Absolute (2)
+    public decimal DiscountAmount { get; set; }         // giá trị giảm (% hoặc số tiền)
+    public string Description { get; set; } = "";       // mô tả
+    public bool Enabled { get; set; } = true;           // cờ kích hoạt
+    public DateTime EffectDateFrom { get; set; }        // hiệu lực từ
+    public DateTime? EffectDateTo { get; set; }         // hiệu lực đến
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
