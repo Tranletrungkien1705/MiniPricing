@@ -563,4 +563,23 @@ public sealed class SpecCustomField
     public bool FlagActive { get; set; } = true;
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
+}/// <summary>
+/// Danh mục loại tiền tệ (port từ Mst_Currency nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: CurrencyCode (+ OrgID). Đây là danh mục gốc của bảng giá:
+/// khai báo các loại tiền tệ dùng để ghi giá bán/giá mua (SpecPrice.CurrencyCode,
+/// CurrencyEx.CurrencyCode, CurrencyConvert.CurrencyCode tham chiếu tới đây).
+/// Mỗi dòng có tên tiền tệ (CurrencyName) và cờ hiệu lực (FlagActive).
+/// Khi tạo: CurrencyCode bắt buộc & chưa tồn tại (Mst_Currency_CheckDB_CurrencyExist);
+/// khi cập nhật/xoá: CurrencyCode phải tồn tại (Mst_Currency_CheckDB_CurrencyNotFound);
+/// trạng thái hiệu lực không hợp lệ (Mst_Currency_CheckDB_FlagActiveNotMatched).
+/// </summary>
+public sealed class Currency
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string CurrencyCode { get; set; } = "";   // mã loại tiền tệ (vd VND, USD)
+    public string CurrencyName { get; set; } = "";   // tên loại tiền tệ
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
 }

@@ -199,5 +199,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục loại tiền tệ mẫu (Mst_Currency): danh mục gốc của bảng giá, khai báo tiền tệ dùng để ghi giá.
+        if (!await db.Currencies.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Currencies.AddRange(
+                new Currency { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "VND", CurrencyName = "Việt Nam Đồng", FlagActive = true },
+                new Currency { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", CurrencyName = "Đô la Mỹ", FlagActive = true },
+                new Currency { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "EUR", CurrencyName = "Euro", FlagActive = true }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

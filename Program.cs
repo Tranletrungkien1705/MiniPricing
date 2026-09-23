@@ -43,6 +43,7 @@ builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecCustomFieldService, SpecCustomFieldService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -532,6 +533,27 @@ app.MapDelete("/api/speccustomfields", async (string code, ISpecCustomFieldServi
 // Tra trường mở rộng hiệu lực theo mã + kênh.
 app.MapGet("/api/speccustomfield", async (string code, ISpecCustomFieldService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục loại tiền tệ (Mst_Currency) — danh mục gốc của bảng giá, khai báo tiền tệ dùng để ghi giá =====
+app.MapPost("/api/currencies", async (UpsertCurrencyDto dto, ICurrencyService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CurrencyCode)) return Results.BadRequest(new { error = "Cần CurrencyCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/currencies", async (ICurrencyService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListAsync(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/currencies", async (string code, ICurrencyService svc) =>
+{
+    var r = await svc.DeleteAsync(code);
+    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra loại tiền tệ hiệu lực theo mã.
+app.MapGet("/api/currency", async (string code, ICurrencyService svc) =>
+    Results.Ok(await svc.ResolveAsync(code))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
 app.MapPost("/api/products", async (UpsertProductDto dto, IProductService svc) =>
