@@ -539,3 +539,28 @@ public sealed class ProductType
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Trường mở rộng của quy cách (port từ Mst_SpecCustomField nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: SpecCustomFieldCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// khai báo các trường mở rộng (CustomField1..10) gắn vào quy cách (Mst_Spec) để lưu thêm
+/// thuộc tính phục vụ phân loại/áp giá. Mỗi dòng có tên trường (SpecCustomFieldName),
+/// kiểu dữ liệu vật lý trong DB (DBPhysicalType), ghi chú và cờ hiệu lực.
+/// Khi tạo: SpecCustomFieldCode bắt buộc & chưa tồn tại trong org
+/// (Mst_SpecCustomField_CheckDB_CustomFieldExist); khi cập nhật: mã phải tồn tại
+/// (Mst_SpecCustomField_CheckDB_CustomFieldNotFound) và tên không rỗng
+/// (Mst_SpecCustomField_Update_InvalidSpecCustomFieldName).
+/// </summary>
+public sealed class SpecCustomField
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecCustomFieldCode { get; set; } = "";   // mã trường mở rộng
+    public string NetworkID { get; set; } = "";             // kênh/vùng áp dụng
+    public string SpecCustomFieldName { get; set; } = "";   // tên trường mở rộng
+    public string DBPhysicalType { get; set; } = "";        // kiểu dữ liệu vật lý trong DB
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

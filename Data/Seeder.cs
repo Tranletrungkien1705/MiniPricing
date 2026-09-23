@@ -188,5 +188,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Trường mở rộng của quy cách mẫu (Mst_SpecCustomField): khai báo CustomField1..10 gắn vào Spec.
+        if (!await db.SpecCustomFields.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.SpecCustomFields.AddRange(
+                new SpecCustomField { OrgId = TenantContext.DefaultOrgId, SpecCustomFieldCode = "CF1", NetworkID = "ALL", SpecCustomFieldName = "Xuất xứ", DBPhysicalType = "nvarchar(255)", Remark = "Trường mở rộng 1" },
+                new SpecCustomField { OrgId = TenantContext.DefaultOrgId, SpecCustomFieldCode = "CF2", NetworkID = "ALL", SpecCustomFieldName = "Bảo hành (tháng)", DBPhysicalType = "int", Remark = "Trường mở rộng 2" },
+                new SpecCustomField { OrgId = TenantContext.DefaultOrgId, SpecCustomFieldCode = "CF3", NetworkID = "ALL", SpecCustomFieldName = "Màu sắc", DBPhysicalType = "nvarchar(100)", Remark = "Trường mở rộng 3" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

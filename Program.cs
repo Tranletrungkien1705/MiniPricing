@@ -42,6 +42,7 @@ builder.Services.AddScoped<ISpecTypeService, SpecTypeService>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ISpecCustomFieldService, SpecCustomFieldService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -509,6 +510,27 @@ app.MapDelete("/api/producttypes", async (string code, IProductTypeService svc, 
 
 // Tra loại hàng hóa hiệu lực theo mã + kênh.
 app.MapGet("/api/producttype", async (string code, IProductTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Trường mở rộng của quy cách (Mst_SpecCustomField) — danh mục gốc của bảng giá, khai báo CustomField1..10 gắn vào Spec =====
+app.MapPost("/api/speccustomfields", async (UpsertSpecCustomFieldDto dto, ISpecCustomFieldService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.SpecCustomFieldCode)) return Results.BadRequest(new { error = "Cần SpecCustomFieldCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/speccustomfields", async (ISpecCustomFieldService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListAsync(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/speccustomfields", async (string code, ISpecCustomFieldService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(code, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra trường mở rộng hiệu lực theo mã + kênh.
+app.MapGet("/api/speccustomfield", async (string code, ISpecCustomFieldService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====

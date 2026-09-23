@@ -24,6 +24,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<ProductGroup> ProductGroups => Set<ProductGroup>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductType> ProductTypes => Set<ProductType>();
+    public DbSet<SpecCustomField> SpecCustomFields => Set<SpecCustomField>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -47,5 +48,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<ProductGroup>().HasIndex(x => new { x.OrgId, x.ProductGrpCode, x.NetworkID }).IsUnique();
         b.Entity<Product>().HasIndex(x => new { x.OrgId, x.ProductCode, x.NetworkID }).IsUnique();
         b.Entity<ProductType>().HasIndex(x => new { x.OrgId, x.ProductTypeCode, x.NetworkID }).IsUnique();
+        b.Entity<SpecCustomField>().HasIndex(x => new { x.OrgId, x.SpecCustomFieldCode, x.NetworkID }).IsUnique();
     }
 }
