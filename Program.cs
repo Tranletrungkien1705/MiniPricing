@@ -26,6 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
+builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -134,6 +135,28 @@ app.MapDelete("/api/specprices", async (string specCode, string unitCode, ISpecP
 // Tra giá quy cách hiệu lực → giá sau chiết khấu + giá đã gồm VAT.
 app.MapGet("/api/specprice", async (string spec, ISpecPriceService svc, string? unit, string? network, string? date) =>
     Results.Ok(await svc.ResolveAsync(spec, unit, network, date))).RequireAuthorization();
+
+// ===== Giá xe theo CarSubSpec (Mst_CarSubSpecPrice) — GTĐG/GTBĐTD + giá bán theo hiệu lực =====
+app.MapPost("/api/carsubspeccprices", async (UpsertCarSubSpecPriceDto dto, ICarSubSpecPriceService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CarCode) || string.IsNullOrWhiteSpace(dto.SubSpecCode))
+        return Results.BadRequest(new { error = "Cần CarCode và SubSpecCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/carsubspeccprices", async (ICarSubSpecPriceService svc, string? carCode) =>
+    Results.Ok(await svc.ListAsync(carCode))).RequireAuthorization();
+
+app.MapDelete("/api/carsubspeccprices", async (string carCode, string subSpecCode, ICarSubSpecPriceService svc, string? networkId, DateTime effectStart) =>
+{
+    var r = await svc.DeleteAsync(carCode, subSpecCode, networkId ?? "ALL", effectStart);
+    return r is null ? Results.NotFound(new { carCode, subSpecCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra giá xe theo CarSubSpec hiệu lực → giá bán + chênh lệch so với GTĐG/GTBĐTD.
+app.MapGet("/api/carsubspeccprice", async (string car, ICarSubSpecPriceService svc, string? subSpec, string? network, string? date) =>
+    Results.Ok(await svc.ResolveAsync(car, subSpec, network, date))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

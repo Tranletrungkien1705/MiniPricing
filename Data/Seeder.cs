@@ -21,5 +21,17 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Giá xe theo CarSubSpec mẫu (Mst_CarSubSpecPrice): GTĐG/GTBĐTD + giá bán theo kênh.
+        if (!await db.CarSubSpecPrices.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            var from = new DateTime(2024, 1, 1);
+            db.CarSubSpecPrices.AddRange(
+                new CarSubSpecPrice { OrgId = TenantContext.DefaultOrgId, CarCode = "VF8", SubSpecCode = "ECO", NetworkID = "ALL", GTDG = 1_100_000_000, GTBDTD = 1_150_000_000, SellPrice = 1_090_000_000, EffectDTimeStart = from, Remark = "Giá niêm yết" },
+                new CarSubSpecPrice { OrgId = TenantContext.DefaultOrgId, CarCode = "VF8", SubSpecCode = "PLUS", NetworkID = "ALL", GTDG = 1_250_000_000, GTBDTD = 1_300_000_000, SellPrice = 1_240_000_000, EffectDTimeStart = from },
+                new CarSubSpecPrice { OrgId = TenantContext.DefaultOrgId, CarCode = "VF8", SubSpecCode = "PLUS", NetworkID = "DEALER", GTDG = 1_250_000_000, GTBDTD = 1_300_000_000, SellPrice = 1_200_000_000, EffectDTimeStart = from, Remark = "Giá đại lý" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }
