@@ -123,5 +123,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục model / dòng sản phẩm mẫu (Mst_Model): danh mục gốc của bảng giá, Spec tham chiếu qua ModelCode.
+        if (!await db.Models.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Models.AddRange(
+                new Model { OrgId = TenantContext.DefaultOrgId, ModelCode = "RO-100", NetworkID = "ALL", ModelName = "Máy lọc nước RO 100", OrgModelCode = "RO100", BrandCode = "KANGAROO", Remark = "Dòng máy lọc gia đình" },
+                new Model { OrgId = TenantContext.DefaultOrgId, ModelCode = "RO-200", NetworkID = "ALL", ModelName = "Máy lọc nước RO 200", OrgModelCode = "RO200", BrandCode = "KANGAROO", Remark = "Dòng máy lọc công suất lớn" },
+                new Model { OrgId = TenantContext.DefaultOrgId, ModelCode = "RO-100", NetworkID = "DEALER", ModelName = "Máy lọc nước RO 100 (đại lý)", OrgModelCode = "RO100", BrandCode = "KANGAROO", NetworkModelCode = "RO-100", Remark = "Model theo kênh đại lý" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

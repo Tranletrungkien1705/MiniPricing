@@ -35,6 +35,7 @@ builder.Services.AddScoped<ICurrencyConvertService, CurrencyConvertService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<ISpecService, SpecService>();
 builder.Services.AddScoped<IDiscountCodeService, DiscountCodeService>();
+builder.Services.AddScoped<IModelService, ModelService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -349,6 +350,27 @@ app.MapGet("/api/discountcode/apply", async (string code, decimal amount, IDisco
     try { return Results.Ok(await svc.ApplyAsync(code, amount, DateTime.TryParse(date, out var d) ? d : null)); }
     catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
 }).RequireAuthorization();
+
+// ===== Danh mục model / dòng sản phẩm (Mst_Model) — danh mục gốc của bảng giá (Spec tham chiếu qua ModelCode) =====
+app.MapPost("/api/models", async (UpsertModelDto dto, IModelService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.ModelCode)) return Results.BadRequest(new { error = "Cần ModelCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/models", async (IModelService svc, string? modelCode, string? modelName, string? brandCode) =>
+    Results.Ok(await svc.ListAsync(modelCode, modelName, brandCode))).RequireAuthorization();
+
+app.MapDelete("/api/models", async (string modelCode, IModelService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(modelCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { modelCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra model hiệu lực theo mã + kênh.
+app.MapGet("/api/model", async (string code, IModelService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

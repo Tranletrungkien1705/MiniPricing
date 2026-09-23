@@ -252,6 +252,30 @@ public sealed class Spec
 }
 
 /// <summary>
+/// Danh mục model / dòng sản phẩm (port từ Mst_Model nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: ModelCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// Spec tham chiếu tới đây qua ModelCode. Mỗi dòng khai báo tên model (ModelName),
+/// mã model nội bộ (OrgModelCode), hãng (BrandCode), mã model ở kênh cha
+/// (NetworkModelCode) và cờ hiệu lực. Khi tạo: ModelCode + BrandCode bắt buộc,
+/// BrandCode phải tồn tại & active (Mst_Brand_CheckDB), ModelName không rỗng.
+/// </summary>
+public sealed class Model
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string ModelCode { get; set; } = "";            // mã model
+    public string NetworkID { get; set; } = "";            // kênh/vùng áp dụng
+    public string ModelName { get; set; } = "";            // tên model
+    public string OrgModelCode { get; set; } = "";         // mã model nội bộ của org
+    public string BrandCode { get; set; } = "";            // mã hãng (Mst_Brand)
+    public string? NetworkModelCode { get; set; }           // mã model ở kênh cha
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+
+/// <summary>
 /// Quy đổi tiền tệ theo hiệu lực (port từ Mst_CurrencyConvert nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CurrencyCode (tiền tệ nguồn) + CurrencyCodeV (tiền tệ đích) + NetworkID.
 /// Mỗi dòng khai báo tỷ giá mua/bán (BuyRate/SellRate) và các giá trị quy đổi
