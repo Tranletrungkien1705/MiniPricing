@@ -37,6 +37,7 @@ builder.Services.AddScoped<ISpecService, SpecService>();
 builder.Services.AddScoped<IDiscountCodeService, DiscountCodeService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
+builder.Services.AddScoped<ISpecTypeService, SpecTypeService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -393,6 +394,48 @@ app.MapDelete("/api/brands", async (string brandCode, IBrandService svc, string?
 // Tra hãng hiệu lực theo mã + kênh.
 app.MapGet("/api/brand", async (string code, IBrandService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục phân loại quy cách cấp 1 (Mst_SpecType1) — danh mục gốc của bảng giá (Spec tham chiếu qua SpecType1) =====
+app.MapPost("/api/spectype1s", async (UpsertSpecTypeDto dto, ISpecTypeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.Code)) return Results.BadRequest(new { error = "Cần Code." });
+    try { return Results.Ok(await svc.UpsertType1Async(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/spectype1s", async (ISpecTypeService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListType1Async(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/spectype1s", async (string code, ISpecTypeService svc, string? networkId) =>
+{
+    var r = await svc.DeleteType1Async(code, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra phân loại 1 hiệu lực theo mã + kênh.
+app.MapGet("/api/spectype1", async (string code, ISpecTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveType1Async(code, network))).RequireAuthorization();
+
+// ===== Danh mục phân loại quy cách cấp 2 (Mst_SpecType2) — danh mục gốc của bảng giá (Spec tham chiếu qua SpecType2) =====
+app.MapPost("/api/spectype2s", async (UpsertSpecTypeDto dto, ISpecTypeService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.Code)) return Results.BadRequest(new { error = "Cần Code." });
+    try { return Results.Ok(await svc.UpsertType2Async(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/spectype2s", async (ISpecTypeService svc, string? code, string? name) =>
+    Results.Ok(await svc.ListType2Async(code, name))).RequireAuthorization();
+
+app.MapDelete("/api/spectype2s", async (string code, ISpecTypeService svc, string? networkId) =>
+{
+    var r = await svc.DeleteType2Async(code, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { code }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra phân loại 2 hiệu lực theo mã + kênh.
+app.MapGet("/api/spectype2", async (string code, ISpecTypeService svc, string? network) =>
+    Results.Ok(await svc.ResolveType2Async(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

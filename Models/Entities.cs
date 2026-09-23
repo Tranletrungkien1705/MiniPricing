@@ -351,3 +351,43 @@ public sealed class DiscountCode
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+/// <summary>
+/// Danh má»¥c phÃ¢n loáº¡i quy cÃ¡ch cáº¥p 1 (port tá»« Mst_SpecType1 nguá»“n 2019.4.ProductCenter).
+/// KhoÃ¡ nghiá»‡p vá»¥: SpecType1 + OrgID (+ NetworkID). ÄÃ¢y lÃ  danh má»¥c gá»‘c cá»§a báº£ng giÃ¡:
+/// Spec tham chiáº¿u tá»›i Ä‘Ã¢y qua SpecType1. Má»—i dÃ²ng khai bÃ¡o tÃªn phÃ¢n loáº¡i (SpecType1Name),
+/// ghi chÃº vÃ  cá» hiá»‡u lá»±c. Khi táº¡o: SpecType1 báº¯t buá»™c & chÆ°a tá»“n táº¡i
+/// (Mst_SpecType1_Create_InvalidSpecType1 / Mst_SpecType1_CheckDB_SpecType1Exist),
+/// SpecType1Name báº¯t buá»™c (Mst_SpecType1_Create_InvalidSpecType1Name).
+/// </summary>
+public sealed class SpecType1
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecType1Code { get; set; } = "";   // mÃ£ phÃ¢n loáº¡i 1
+    public string NetworkID { get; set; } = "";       // kÃªnh/vÃ¹ng Ã¡p dá»¥ng
+    public string SpecType1Name { get; set; } = "";   // tÃªn phÃ¢n loáº¡i 1
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+/// <summary>
+/// Danh má»¥c phÃ¢n loáº¡i quy cÃ¡ch cáº¥p 2 (port tá»« Mst_SpecType2 nguá»“n 2019.4.ProductCenter).
+/// KhoÃ¡ nghiá»‡p vá»¥: SpecType2 + OrgID (+ NetworkID). ÄÃ¢y lÃ  danh má»¥c gá»‘c cá»§a báº£ng giÃ¡:
+/// Spec tham chiáº¿u tá»›i Ä‘Ã¢y qua SpecType2. Má»—i dÃ²ng khai bÃ¡o tÃªn phÃ¢n loáº¡i (SpecType2Name),
+/// ghi chÃº vÃ  cá» hiá»‡u lá»±c. Khi táº¡o: SpecType2 báº¯t buá»™c & chÆ°a tá»“n táº¡i
+/// (Mst_SpecType2_Create_InvalidSpecType2 / Mst_SpecType2_CheckDB_SpecType2Exist),
+/// SpecType2Name báº¯t buá»™c (Mst_SpecType2_Create_InvalidSpecType2Name).
+/// </summary>
+public sealed class SpecType2
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string SpecType2Code { get; set; } = "";   // mÃ£ phÃ¢n loáº¡i 2
+    public string NetworkID { get; set; } = "";       // kÃªnh/vÃ¹ng Ã¡p dá»¥ng
+    public string SpecType2Name { get; set; } = "";   // tÃªn phÃ¢n loáº¡i 2
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

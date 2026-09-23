@@ -145,5 +145,26 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục phân loại quy cách cấp 1 mẫu (Mst_SpecType1): danh mục gốc của bảng giá, Spec tham chiếu qua SpecType1.
+        if (!await db.SpecType1s.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.SpecType1s.AddRange(
+                new SpecType1 { OrgId = TenantContext.DefaultOrgId, SpecType1Code = "GIA DUNG", NetworkID = "ALL", SpecType1Name = "Gia dụng", Remark = "Nhóm sản phẩm gia đình" },
+                new SpecType1 { OrgId = TenantContext.DefaultOrgId, SpecType1Code = "PHU KIEN", NetworkID = "ALL", SpecType1Name = "Phụ kiện", Remark = "Nhóm phụ kiện thay thế" },
+                new SpecType1 { OrgId = TenantContext.DefaultOrgId, SpecType1Code = "GIA DUNG", NetworkID = "DEALER", SpecType1Name = "Gia dụng (đại lý)", Remark = "Phân loại theo kênh đại lý" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // Danh mục phân loại quy cách cấp 2 mẫu (Mst_SpecType2): danh mục gốc của bảng giá, Spec tham chiếu qua SpecType2.
+        if (!await db.SpecType2s.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.SpecType2s.AddRange(
+                new SpecType2 { OrgId = TenantContext.DefaultOrgId, SpecType2Code = "LOC NUOC", NetworkID = "ALL", SpecType2Name = "Lọc nước", Remark = "Phân loại con máy lọc" },
+                new SpecType2 { OrgId = TenantContext.DefaultOrgId, SpecType2Code = "LINH KIEN", NetworkID = "ALL", SpecType2Name = "Linh kiện", Remark = "Phân loại con linh kiện" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }
