@@ -232,5 +232,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục đại lý mẫu (Mst_Dealer): danh mục gốc của bảng giá, đại lý là kênh nhận giá riêng (DEALER).
+        if (!await db.Dealers.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Dealers.AddRange(
+                new Dealer { OrgId = TenantContext.DefaultOrgId, DLCode = "DL-HN", NetworkID = "DEALER", DLName = "Đại lý Hà Nội", Remark = "Đại lý khu vực miền Bắc" },
+                new Dealer { OrgId = TenantContext.DefaultOrgId, DLCode = "DL-HCM", NetworkID = "DEALER", DLName = "Đại lý Hồ Chí Minh", Remark = "Đại lý khu vực miền Nam" },
+                new Dealer { OrgId = TenantContext.DefaultOrgId, DLCode = "DL-DN", NetworkID = "DEALER", DLName = "Đại lý Đà Nẵng", FlagActive = false, Remark = "Tạm ngưng" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

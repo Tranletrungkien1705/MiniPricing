@@ -46,6 +46,7 @@ builder.Services.AddScoped<ISpecCustomFieldService, SpecCustomFieldService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ISsccTypeService, SsccTypeService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -601,6 +602,27 @@ app.MapDelete("/api/attributes", async (string attributeCode, IAttributeService 
 
 // Tra đặc tính hiệu lực theo mã + kênh.
 app.MapGet("/api/attribute", async (string code, IAttributeService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục đại lý (Mst_Dealer) — danh mục gốc của bảng giá, đại lý là kênh nhận giá riêng (DEALER) =====
+app.MapPost("/api/dealers", async (UpsertDealerDto dto, IDealerService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.DLCode)) return Results.BadRequest(new { error = "Cần DLCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/dealers", async (IDealerService svc, string? dlCode, string? dlName) =>
+    Results.Ok(await svc.ListAsync(dlCode, dlName))).RequireAuthorization();
+
+app.MapDelete("/api/dealers", async (string dlCode, IDealerService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(dlCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { dlCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra đại lý hiệu lực theo mã + kênh.
+app.MapGet("/api/dealer", async (string code, IDealerService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====

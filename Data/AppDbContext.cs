@@ -28,6 +28,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<SsccType> SsccTypes => Set<SsccType>();
     public DbSet<AttributeDef> Attributes => Set<AttributeDef>();
+    public DbSet<Dealer> Dealers => Set<Dealer>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -55,5 +56,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<Currency>().HasIndex(x => new { x.OrgId, x.CurrencyCode }).IsUnique();
         b.Entity<SsccType>().HasIndex(x => new { x.OrgId, x.SSCCType, x.NetworkID }).IsUnique();
         b.Entity<AttributeDef>().HasIndex(x => new { x.OrgId, x.AttributeCode, x.NetworkID }).IsUnique();
+        b.Entity<Dealer>().HasIndex(x => new { x.OrgId, x.DLCode, x.NetworkID }).IsUnique();
     }
 }

@@ -633,3 +633,31 @@ public sealed class AttributeDef
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Danh mục đại lý (port từ Mst_Dealer nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: DLCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// đại lý là kênh nhận giá riêng (NetworkID = "DEALER") — dùng để áp giá theo kênh đại lý
+/// (SpecPrice/PriceItem theo NetworkID/tier Dealer). Mỗi dòng khai báo tên đại lý (DLName),
+/// kênh áp dụng (NetworkID) và cờ hiệu lực (FlagActive).
+/// Quy tắc nguồn (Mst_Dealer_CheckDB + error codes ErrProductCenter.Mst_Dealer_*):
+///   - Create: DLCode bắt buộc (Mst_Dealer_Create_InvalidDLCode);
+///             DLCode chưa tồn tại (Mst_Dealer_CheckDB_DLCodeExist);
+///             DLName bắt buộc (Mst_Dealer_Create_InvalidDLName).
+///   - Update: DLCode phải tồn tại (Mst_Dealer_CheckDB_DLCodeNotFound);
+///             DLName không rỗng (Mst_Dealer_Update_InvalidDLName).
+///   - Delete: DLCode phải tồn tại (Mst_Dealer_CheckDB_DLCodeNotFound).
+///   - Resolve: trạng thái hiệu lực không khớp (Mst_Dealer_CheckDB_FlagActiveNotMatched).
+/// </summary>
+public sealed class Dealer
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string DLCode { get; set; } = "";         // mã đại lý
+    public string NetworkID { get; set; } = "";       // kênh/vùng áp dụng (DEALER...)
+    public string DLName { get; set; } = "";         // tên đại lý
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
