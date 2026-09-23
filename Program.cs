@@ -28,6 +28,7 @@ builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<ISpecPriceService, SpecPriceService>();
 builder.Services.AddScoped<ICarSubSpecPriceService, CarSubSpecPriceService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
+builder.Services.AddScoped<ICurrencyExService, CurrencyExService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -179,6 +180,31 @@ app.MapDelete("/api/vatrates", async (string vatRateCode, IVatRateService svc, s
 // Tra thuế suất hiệu lực theo mã + kênh.
 app.MapGet("/api/vatrate", async (string code, IVatRateService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Tỷ giá ngoại tệ (Mst_CurrencyEx) — tỷ giá mua/bán theo mã tiền tệ × kênh =====
+app.MapPost("/api/currencyexes", async (UpsertCurrencyExDto dto, ICurrencyExService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CurrencyCode)) return Results.BadRequest(new { error = "Cần CurrencyCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/currencyexes", async (ICurrencyExService svc, string? currencyCode) =>
+    Results.Ok(await svc.ListAsync(currencyCode))).RequireAuthorization();
+
+app.MapDelete("/api/currencyexes", async (string currencyCode, ICurrencyExService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(currencyCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { currencyCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra tỷ giá hiệu lực theo mã + kênh.
+app.MapGet("/api/currencyex", async (string code, ICurrencyExService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// Quy đổi số tiền sang tiền tệ gốc theo tỷ giá hiệu lực (side=buy|sell).
+app.MapGet("/api/currencyex/convert", async (string code, decimal amount, ICurrencyExService svc, string? network, string? side) =>
+    Results.Ok(await svc.ConvertAsync(code, amount, network, side))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.
 app.MapPost("/api/import/priceitems", async (ImportPriceDto dto, AppDbContext db, ITenantContext tenant) =>

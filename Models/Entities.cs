@@ -99,3 +99,27 @@ public sealed class VatRate
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Tỷ giá ngoại tệ (port từ Mst_CurrencyEx nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: CurrencyCode (+ NetworkID). Mỗi dòng có tên tiền tệ, tiền tệ gốc,
+/// tỷ giá mua (BuyRate) / tỷ giá bán (SellRate), thời điểm cập nhật và ghi chú.
+/// Dùng để quy đổi giá bán/giá mua giữa các loại tiền tệ khi bảng giá ghi bằng ngoại tệ.
+/// </summary>
+public sealed class CurrencyEx
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string CurrencyCode { get; set; } = "";       // mã tiền tệ (vd USD)
+    public string NetworkID { get; set; } = "";          // kênh/vùng áp dụng
+    public string CurrencyName { get; set; } = "";       // tên tiền tệ
+    public string BaseCurrencyCode { get; set; } = "";   // tiền tệ gốc quy đổi (vd VND)
+    public decimal BuyRate { get; set; }                   // tỷ giá mua
+    public decimal SellRate { get; set; }                  // tỷ giá bán
+    public DateTime UpdatedTime { get; set; } = DateTime.Now; // thời điểm cập nhật tỷ giá
+    public string InterEx { get; set; } = "";            // cờ/nguồn tỷ giá liên ngân hàng
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

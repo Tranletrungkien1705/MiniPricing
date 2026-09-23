@@ -34,6 +34,17 @@ public static class Seeder
             await db.SaveChangesAsync();
         }
 
+        // Tỷ giá ngoại tệ mẫu (Mst_CurrencyEx): mã tiền tệ × kênh → tỷ giá mua/bán so với VND.
+        if (!await db.CurrencyExes.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.CurrencyExes.AddRange(
+                new CurrencyEx { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "VND", NetworkID = "ALL", CurrencyName = "Việt Nam Đồng", BaseCurrencyCode = "VND", BuyRate = 1, SellRate = 1, InterEx = "N", Remark = "Tiền tệ gốc" },
+                new CurrencyEx { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "USD", NetworkID = "ALL", CurrencyName = "Đô la Mỹ", BaseCurrencyCode = "VND", BuyRate = 25_000, SellRate = 25_400, InterEx = "Y", Remark = "Tỷ giá liên ngân hàng" },
+                new CurrencyEx { OrgId = TenantContext.DefaultOrgId, CurrencyCode = "EUR", NetworkID = "ALL", CurrencyName = "Euro", BaseCurrencyCode = "VND", BuyRate = 27_000, SellRate = 27_500, InterEx = "Y" }
+            );
+            await db.SaveChangesAsync();
+        }
+
         // Giá xe theo CarSubSpec mẫu (Mst_CarSubSpecPrice): GTĐG/GTBĐTD + giá bán theo kênh.
         if (!await db.CarSubSpecPrices.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
         {
