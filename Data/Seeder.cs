@@ -134,5 +134,16 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Danh mục hãng / thương hiệu mẫu (Mst_Brand): danh mục gốc của bảng giá, Model tham chiếu qua BrandCode.
+        if (!await db.Brands.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.Brands.AddRange(
+                new Brand { OrgId = TenantContext.DefaultOrgId, BrandCode = "KANGAROO", NetworkID = "ALL", BrandName = "Kangaroo", Remark = "Thương hiệu máy lọc nước" },
+                new Brand { OrgId = TenantContext.DefaultOrgId, BrandCode = "AQUA", NetworkID = "ALL", BrandName = "Aqua", Remark = "Thương hiệu gia dụng" },
+                new Brand { OrgId = TenantContext.DefaultOrgId, BrandCode = "KANGAROO", NetworkID = "DEALER", BrandName = "Kangaroo (đại lý)", NetworkBrandCode = "KANGAROO", Remark = "Hãng theo kênh đại lý" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

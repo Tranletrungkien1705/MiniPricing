@@ -36,6 +36,7 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<ISpecService, SpecService>();
 builder.Services.AddScoped<IDiscountCodeService, DiscountCodeService>();
 builder.Services.AddScoped<IModelService, ModelService>();
+builder.Services.AddScoped<IBrandService, BrandService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -370,6 +371,27 @@ app.MapDelete("/api/models", async (string modelCode, IModelService svc, string?
 
 // Tra model hiệu lực theo mã + kênh.
 app.MapGet("/api/model", async (string code, IModelService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
+
+// ===== Danh mục hãng / thương hiệu (Mst_Brand) — danh mục gốc của bảng giá (Model tham chiếu qua BrandCode) =====
+app.MapPost("/api/brands", async (UpsertBrandDto dto, IBrandService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.BrandCode)) return Results.BadRequest(new { error = "Cần BrandCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/brands", async (IBrandService svc, string? brandCode, string? brandName) =>
+    Results.Ok(await svc.ListAsync(brandCode, brandName))).RequireAuthorization();
+
+app.MapDelete("/api/brands", async (string brandCode, IBrandService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(brandCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { brandCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra hãng hiệu lực theo mã + kênh.
+app.MapGet("/api/brand", async (string code, IBrandService svc, string? network) =>
     Results.Ok(await svc.ResolveAsync(code, network))).RequireAuthorization();
 
 // Import bulk giá thật (Mst_CarPrice nguồn 2010.HTC) — upsert 1 PriceList theo Code + nhiều PriceItem theo ItemCode.

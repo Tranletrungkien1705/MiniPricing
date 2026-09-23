@@ -276,6 +276,29 @@ public sealed class Model
 }
 
 /// <summary>
+/// Danh mục hãng / thương hiệu (port từ Mst_Brand nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: BrandCode + OrgID (+ NetworkID). Đây là danh mục gốc của bảng giá:
+/// Model tham chiếu tới đây qua BrandCode. Mỗi dòng khai báo tên hãng (BrandName),
+/// mã hãng ở kênh cha (NetworkBrandCode) và cờ hiệu lực. Khi tạo: BrandCode bắt buộc,
+/// BrandName bắt buộc & không trùng trong org (Mst_Brand_CheckBrandName),
+/// NetworkBrandCode (nếu khác rỗng) phải tồn tại ở kênh cha
+/// (Mst_Brand_CheckDB_NetworkBrandCodeOfOrgParent).
+/// </summary>
+public sealed class Brand
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string BrandCode { get; set; } = "";            // mã hãng
+    public string NetworkID { get; set; } = "";            // kênh/vùng áp dụng
+    public string BrandName { get; set; } = "";            // tên hãng
+    public string? NetworkBrandCode { get; set; }           // mã hãng ở kênh cha
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}
+
+/// <summary>
 /// Quy đổi tiền tệ theo hiệu lực (port từ Mst_CurrencyConvert nguồn 2019.4.ProductCenter).
 /// Khoá nghiệp vụ: CurrencyCode (tiền tệ nguồn) + CurrencyCodeV (tiền tệ đích) + NetworkID.
 /// Mỗi dòng khai báo tỷ giá mua/bán (BuyRate/SellRate) và các giá trị quy đổi

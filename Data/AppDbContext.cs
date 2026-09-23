@@ -17,6 +17,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<Spec> Specs => Set<Spec>();
     public DbSet<DiscountCode> DiscountCodes => Set<DiscountCode>();
     public DbSet<Model> Models => Set<Model>();
+    public DbSet<Brand> Brands => Set<Brand>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -33,5 +34,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<Spec>().HasIndex(x => new { x.OrgId, x.SpecCode, x.NetworkID }).IsUnique();
         b.Entity<DiscountCode>().HasIndex(x => new { x.OrgId, x.Code }).IsUnique();
         b.Entity<Model>().HasIndex(x => new { x.OrgId, x.ModelCode, x.NetworkID }).IsUnique();
+        b.Entity<Brand>().HasIndex(x => new { x.OrgId, x.BrandCode, x.NetworkID }).IsUnique();
     }
 }
