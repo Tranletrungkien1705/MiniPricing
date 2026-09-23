@@ -30,6 +30,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
     public DbSet<AttributeDef> Attributes => Set<AttributeDef>();
     public DbSet<Dealer> Dealers => Set<Dealer>();
     public DbSet<CustomerGroup> CustomerGroups => Set<CustomerGroup>();
+    public DbSet<ProductBom> ProductBoms => Set<ProductBom>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Org>().HasIndex(x => x.ApiKey).IsUnique();
@@ -59,5 +60,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> opt) : DbContext
         b.Entity<AttributeDef>().HasIndex(x => new { x.OrgId, x.AttributeCode, x.NetworkID }).IsUnique();
         b.Entity<Dealer>().HasIndex(x => new { x.OrgId, x.DLCode, x.NetworkID }).IsUnique();
         b.Entity<CustomerGroup>().HasIndex(x => new { x.OrgId, x.CustomerGrpCode, x.NetworkID }).IsUnique();
+        b.Entity<ProductBom>().HasIndex(x => new { x.OrgId, x.ProductCodeParent, x.ProductCode, x.NetworkID }).IsUnique();
     }
 }

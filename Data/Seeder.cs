@@ -255,5 +255,15 @@ public static class Seeder
             );
             await db.SaveChangesAsync();
         }
+
+        // Định mức nguyên vật liệu mẫu (Prd_BOM): hàng hóa cha COMBO = Σ thành phần × Qty.
+        if (!await db.ProductBoms.AnyAsync(x => x.OrgId == TenantContext.DefaultOrgId))
+        {
+            db.ProductBoms.AddRange(
+                new ProductBom { OrgId = TenantContext.DefaultOrgId, ProductCodeParent = "COMBO-RO", ProductCode = "SP-001", NetworkID = "ALL", Qty = 1, Remark = "Máy lọc RO" },
+                new ProductBom { OrgId = TenantContext.DefaultOrgId, ProductCodeParent = "COMBO-RO", ProductCode = "SP-002", NetworkID = "ALL", Qty = 2, Remark = "2 bộ lõi lọc kèm theo" }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

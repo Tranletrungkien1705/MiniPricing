@@ -695,3 +695,30 @@ public sealed class CustomerGroup
     public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
     public string? LogLUBy { get; set; }
 }
+
+/// <summary>
+/// Định mức nguyên vật liệu / cấu thành sản phẩm (port từ Prd_BOM nguồn 2019.4.ProductCenter).
+/// Khoá nghiệp vụ: ProductCodeParent (hàng hóa cha) + ProductCode (hàng hóa con/thành phần)
+/// + NetworkID. Mỗi dòng khai báo một thành phần (ProductCode) cấu thành nên hàng hóa cha
+/// (ProductCodeParent) với số lượng Qty. Dùng để **cộng dồn giá** (roll-up): giá mua/bán đề xuất
+/// của hàng hóa cha = Σ (UPBuy/UPSell của thành phần × Qty) — theo Prd_BOMUI.BuyAmount/SellAmount
+/// trong nguồn (BuyAmount = mp_UPBuy * Qty, SellAmount = mp_UPSell * Qty).
+/// Quy tắc nguồn (Mst_ProductController.GetBOM + WA_Prd_BOM_Get + Mst_Product_Create/Update):
+///   - BOM chỉ áp cho hàng hóa loại COMBO (ProductType = "COMBO"); ngoài COMBO thì cha là
+///     ProductCodeRoot (Mst_Product_Create_Input_Prd_BOMTblNotFound khi thiếu bảng BOM).
+///   - Hàng hóa không được đồng thời quản lý LOT và Serial
+///     (Mst_Product_Create_Invalid_Prd_BOM_FlagSerialOrFlagLot).
+/// </summary>
+public sealed class ProductBom
+{
+    public long Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string ProductCodeParent { get; set; } = "";  // mã hàng hóa cha (sản phẩm cấu thành)
+    public string ProductCode { get; set; } = "";        // mã hàng hóa con (thành phần)
+    public string NetworkID { get; set; } = "";          // kênh/vùng áp dụng
+    public decimal Qty { get; set; } = 1;                 // số lượng thành phần trong 1 đơn vị cha
+    public string? Remark { get; set; }
+    public bool FlagActive { get; set; } = true;
+    public DateTime LogLUDTimeUTC { get; set; } = DateTime.UtcNow;
+    public string? LogLUBy { get; set; }
+}

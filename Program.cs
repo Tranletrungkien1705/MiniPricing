@@ -48,6 +48,7 @@ builder.Services.AddScoped<ISsccTypeService, SsccTypeService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<IDealerService, DealerService>();
 builder.Services.AddScoped<ICustomerGroupService, CustomerGroupService>();
+builder.Services.AddScoped<IProductBomService, ProductBomService>();
 
 var ssoAuthority = Environment.GetEnvironmentVariable("SSO_AUTHORITY") ?? "https://minisso.onrender.com";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -654,6 +655,28 @@ app.MapGet("/api/customergroup", async (string code, ICustomerGroupService svc, 
 // Cây nhóm khách hàng theo kênh (dựng theo CustomerGrpCodeParent).
 app.MapGet("/api/customergroup/tree", async (ICustomerGroupService svc, string? network) =>
     Results.Ok(await svc.TreeAsync(network))).RequireAuthorization();
+
+// ===== Định mức nguyên vật liệu / cấu thành sản phẩm (Prd_BOM) — cộng dồn giá mua/bán theo thành phần =====
+app.MapPost("/api/productboms", async (UpsertProductBomDto dto, IProductBomService svc) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.ProductCodeParent) || string.IsNullOrWhiteSpace(dto.ProductCode))
+        return Results.BadRequest(new { error = "Cần ProductCodeParent và ProductCode." });
+    try { return Results.Ok(await svc.UpsertAsync(dto)); }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
+}).RequireAuthorization();
+
+app.MapGet("/api/productboms", async (IProductBomService svc, string? productCodeParent, string? productCode) =>
+    Results.Ok(await svc.ListAsync(productCodeParent, productCode))).RequireAuthorization();
+
+app.MapDelete("/api/productboms", async (string productCodeParent, string productCode, IProductBomService svc, string? networkId) =>
+{
+    var r = await svc.DeleteAsync(productCodeParent, productCode, networkId ?? "ALL");
+    return r is null ? Results.NotFound(new { productCodeParent, productCode }) : Results.Ok(r);
+}).RequireAuthorization();
+
+// Tra định mức hiệu lực của hàng hóa cha → danh sách thành phần + cộng dồn giá mua/bán.
+app.MapGet("/api/productbom", async (string parent, IProductBomService svc, string? network) =>
+    Results.Ok(await svc.ResolveAsync(parent, network))).RequireAuthorization();
 
 // ===== Hàng hóa / sản phẩm (Mst_Product) — danh mục gốc mang giá mua/bán đề xuất + VAT + đơn vị tính =====
 app.MapPost("/api/products", async (UpsertProductDto dto, IProductService svc) =>
